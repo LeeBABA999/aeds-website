@@ -1,5 +1,5 @@
 ---
-title: "Michael Li"
+title: "About Me"
 ---
 
 ::::: columns
@@ -10,7 +10,7 @@ title: "Michael Li"
 ::: {.column width="65%"}
 ![](images/UniversityofPennsylvania_FullLogo_RGB.png){width="250px"}
 
-# Student Name
+# Michael Li
 
 University of Pennsylvaina
 
