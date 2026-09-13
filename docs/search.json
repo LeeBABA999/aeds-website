@@ -138,5 +138,33 @@
     "title": "Why Do Some Arrows Stay on the Same Line?",
     "section": "Why this is useful",
     "text": "Why this is useful\nIf we keep applying our matrix to \\((1,0)\\), we get \\((2,1)\\), then \\((5,4)\\), then \\((14,13)\\). The arrow gets closer to the diagonal direction of \\((1,1)\\).\nThat happens because the part along this eigenvector grows faster than the other part. An arrow starting exactly along the other eigenvector, \\((1,-1)\\), would stay unchanged instead.\nEigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. Together, they make it easier to understand how a system changes over time."
+  },
+  {
+    "objectID": "blog/posts/post1/blog1_post.html",
+    "href": "blog/posts/post1/blog1_post.html",
+    "title": "Why Do Some Arrows Stay on the Same Line?",
+    "section": "",
+    "text": "Eigenvalues and eigenvectors sound intimidating for some people who are not familiar with it. But actually the main idea of it starts with something simple: an arrow. When a matrix changes an arrow, some arrows stay on the same line. These are eigenvectors, and their eigenvalues describe how they are scaled.\nThis can be hard to see when a matrix is introduced as a box of numbers at the first time we saw them. We get busy multiplying entries and lose track of what the calculation does. Here is a picture that maybe can make the idea easier to follow for you."
+  },
+  {
+    "objectID": "blog/posts/post1/blog1_post.html#a-small-example",
+    "href": "blog/posts/post1/blog1_post.html#a-small-example",
+    "title": "Why Do Some Arrows Stay on the Same Line?",
+    "section": "A small example",
+    "text": "A small example\nLet’s use this matrix as an example:\n\\[\nA = \\begin{pmatrix}2 & 1 \\\\ 1 & 2\\end{pmatrix}.\n\\]\nThink of a vector as an arrow starting at the origin. The vector \\((1,1)\\) ends one unit right and one unit up. This R code for you to see applies the matrix to that arrow. The symbol %*% means matrix multiplication.\n\nA <- matrix(c(2, 1, 1, 2), nrow = 2)\nv <- c(1, 1)\nA %*% v\n\n     [,1]\n[1,]    3\n[2,]    3\n\n\nThe result is \\((3,3)\\). The arrow becomes three times as long, but still points along the same diagonal. That makes \\((1,1)\\) an eigenvector of \\(A\\), with an eigenvalue of 3.\nEigenvectors can also have different lengths.For example, an arrow twice as long along this diagonal still gets stretched by three. Its starting size changes, but its eigenvalue stays the same because the scaling is unchanged.\n\nplot(0, 0, type = \"n\", xlim = c(0, 3.5), ylim = c(0, 3.5),\n     xlab = \"x\", ylab = \"y\", asp = 1)\narrows(0, 0, 3, 3, col = \"red\", lwd = 2)\narrows(0, 0, 1, 1, col = \"blue\", lwd = 2)\ntext(1, 1, \"Before\", pos = 2)\ntext(3, 3, \"After\", pos = 2)\n\n\n\n\nThe blue arrow is the original vector. The red arrow extends three times as far along the same line.\n\n\n\n\nNow try \\((1,0)\\). This arrow starts out pointing horizontally.\n\nw <- c(1, 0)\nA %*% w\n\n     [,1]\n[1,]    2\n[2,]    1\n\n\nThe result is \\((2,1)\\), so the arrow tilts upward. It changes direction, which means \\((1,0)\\) is not an eigenvector of this matrix. The difference is easy to see: one arrow gets longer along its original line, while the other turns.\n\nplot(0, 0, type = \"n\", xlim = c(0, 3.5), ylim = c(0, 3.5),\n     xlab = \"x\", ylab = \"y\", asp = 1)\narrows(0, 0, 2, 1, col = \"red\", lwd = 2)\narrows(0, 0, 1, 0, col = \"blue\", lwd = 2)\ntext(1, 0, \"Before\", pos = 2)\ntext(2, 1, \"After\", pos = 2)\n\n\n\n\nOne detail matters: an arrow is an eigenvector of a particular matrix. A different matrix might turn that same arrow. So the special relationship is between the arrow and the transformation we apply."
+  },
+  {
+    "objectID": "blog/posts/post1/blog1_post.html#what-the-formula-means",
+    "href": "blog/posts/post1/blog1_post.html#what-the-formula-means",
+    "title": "Why Do Some Arrows Stay on the Same Line?",
+    "section": "What the formula means",
+    "text": "What the formula means\nThe definition puts this observation into one equation:\n\\[\nAv = \\lambda v, \\qquad v \\ne 0.\n\\]\nHere, \\(v\\) is an eigenvector and \\(\\lambda\\) is its eigenvalue. For this particular vector, multiplying by the matrix does the same thing as multiplying by one number.\nAn eigenvalue of one leaves the arrow unchanged. A negative eigenvalue reverses it along the same line. An eigenvalue of zero collapses it to the origin. The zero vector itself is excluded because it has no direction."
+  },
+  {
+    "objectID": "blog/posts/post1/blog1_post.html#why-this-is-useful",
+    "href": "blog/posts/post1/blog1_post.html#why-this-is-useful",
+    "title": "Why Do Some Arrows Stay on the Same Line?",
+    "section": "Why this is useful",
+    "text": "Why this is useful\nIf we keep applying our matrix to \\((1,0)\\), we get \\((2,1)\\), then \\((5,4)\\), then \\((14,13)\\). The arrow gets closer to the diagonal direction of \\((1,1)\\).\nThat happens because the part along this eigenvector grows faster than the other part. An arrow starting exactly along the other eigenvector, \\((1,-1)\\), would stay unchanged instead.\nEigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. Together, they make it easier to understand how a system changes over time."
   }
 ]
