@@ -1,13 +1,81 @@
 ---
-title: "My First Blog Post"
-date: 2026-06-16
-categories:
-  - personal
-  - data-science
+title: "Why Do Some Arrows Stay on the Same Line?"
+date: 2026-09-13
+categories: [mathematics, data-science]
+format: html
 ---
 
-![](figure1.png){width="500px"}
+Eigenvalues and eigenvectors sound intimidating for some people who are not familiar with it. But actually the main idea of it starts with something simple: an arrow. When a matrix changes an arrow, some arrows stay on the same line. These are eigenvectors, and their eigenvalues describe how they are scaled.
 
-This is my first blog post. Example $\LaTeX$ equation: $\frac{1}{2}\sum_{i=1}^nx_i$
+This can be hard to see when a matrix is introduced as a box of numbers at the first time we saw them. We get busy multiplying entries and lose track of what the calculation does. Here is a picture that maybe can make the idea easier to follow for you.
 
----
+## A small example
+
+Let's use this matrix as an example:
+
+$$
+A = \begin{pmatrix}2 & 1 \\ 1 & 2\end{pmatrix}.
+$$
+
+Think of a vector as an arrow starting at the origin. The vector $(1,1)$ ends one unit right and one unit up. This R code for you to see applies the matrix to that arrow. The symbol `%*%` means matrix multiplication.
+
+```{r}
+A <- matrix(c(2, 1, 1, 2), nrow = 2)
+v <- c(1, 1)
+A %*% v
+```
+
+The result is $(3,3)$. The arrow becomes three times as long, but still points along the same diagonal. That makes $(1,1)$ an eigenvector of $A$, with an eigenvalue of 3.
+
+Eigenvectors can also have different lengths.For example, an arrow twice as long along this diagonal still gets stretched by three. Its starting size changes, but its eigenvalue stays the same because the scaling is unchanged.
+
+```{r}
+#| fig-cap: "The blue arrow is the original vector. The red arrow extends three times as far along the same line."
+
+plot(0, 0, type = "n", xlim = c(0, 3.5), ylim = c(0, 3.5),
+     xlab = "x", ylab = "y", asp = 1)
+arrows(0, 0, 3, 3, col = "red", lwd = 2)
+arrows(0, 0, 1, 1, col = "blue", lwd = 2)
+text(1, 1, "Before", pos = 2)
+text(3, 3, "After", pos = 2)
+```
+
+Now try $(1,0)$. This arrow starts out pointing horizontally.
+
+```{r}
+w <- c(1, 0)
+A %*% w
+```
+
+The result is $(2,1)$, so the arrow tilts upward. It changes direction, which means $(1,0)$ is not an eigenvector of this matrix. The difference is easy to see: one arrow gets longer along its original line, while the other turns.
+```{r}
+
+plot(0, 0, type = "n", xlim = c(0, 3.5), ylim = c(0, 3.5),
+     xlab = "x", ylab = "y", asp = 1)
+arrows(0, 0, 2, 1, col = "red", lwd = 2)
+arrows(0, 0, 1, 0, col = "blue", lwd = 2)
+text(1, 0, "Before", pos = 2)
+text(2, 1, "After", pos = 2)
+```
+One detail matters: an arrow is an eigenvector of a particular matrix. A different matrix might turn that same arrow. So the special relationship is between the arrow and the transformation we apply.
+
+## What the formula means
+
+The definition puts this observation into one equation:
+
+$$
+Av = \lambda v, \qquad v \ne 0.
+$$
+
+Here, $v$ is an eigenvector and $\lambda$ is its eigenvalue. For this particular vector, multiplying by the matrix does the same thing as multiplying by one number.
+
+An eigenvalue of one leaves the arrow unchanged. A negative eigenvalue reverses it along the same line. An eigenvalue of zero collapses it to the origin. The zero vector itself is excluded because it has no direction.
+
+## Why this is useful
+
+If we keep applying our matrix to $(1,0)$, we get $(2,1)$, then $(5,4)$, then $(14,13)$. The arrow gets closer to the diagonal direction of $(1,1)$.
+
+That happens because the part along this eigenvector grows faster than the other part. An arrow starting exactly along the other eigenvector, $(1,-1)$, would stay unchanged instead.
+
+Eigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. Together, they make it easier to understand how a system changes over time.
+
