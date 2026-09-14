@@ -166,5 +166,12 @@
     "title": "Why Do Some Arrows Stay on the Same Line?",
     "section": "Why this is useful",
     "text": "Why this is useful\nIf we keep applying our matrix to \\((1,0)\\), we get \\((2,1)\\), then \\((5,4)\\), then \\((14,13)\\). The arrow gets closer to the diagonal direction of \\((1,1)\\).\nThat happens because the part along this eigenvector grows faster than the other part. An arrow starting exactly along the other eigenvector, \\((1,-1)\\), would stay unchanged instead.\nEigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. Together, they make it easier to understand how a system changes over time."
+  },
+  {
+    "objectID": "bio.html#my-email",
+    "href": "bio.html#my-email",
+    "title": "About Me",
+    "section": "My Email",
+    "text": "My Email"
   }
 ]
