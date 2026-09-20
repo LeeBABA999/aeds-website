@@ -1,0 +1,2 @@
+source_url,snapshot_date_utc,retrieval_method,scope
+https://www.python.org/jobs/,2026-09-20,Downloaded with rvest::read_html(url),First listing page only

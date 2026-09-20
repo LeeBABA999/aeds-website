@@ -1,9 +1,269 @@
 ---
-title: "My Second Blog Post"
-date: 2026-06-16
-categories:
-  - opinion
-  - labor market
+title: "What Should I Build Next? What Python Job Postings Suggest"
+author: "Michael Li"
+date: "2026-09-20"
+categories: [web scraping, labor market, R]
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+execute:
+  warning: false
+  message: false
+  cache: false
 ---
 
-## This is my second blog post.
+```{r setup, include=FALSE}
+library(rvest)
+library(tidyverse)
+
+input_file <- knitr::current_input(dir = TRUE)
+
+if (is.null(input_file)) {
+  post_dir <- getwd()
+} else {
+  post_dir <- dirname(input_file)
+}
+
+data_dir <- file.path(post_dir, "data")
+results_dir <- file.path(post_dir, "results")
+
+dir.create(data_dir, showWarnings = FALSE)
+dir.create(results_dir, showWarnings = FALSE)
+```
+
+The question
+------------
+
+When I started learning Python when I was a freshmen student in college, deciding what to build next was not obvious. Backend development, databases, and machine learning all seemed useful, but I wanted a project with a very clear purpose.
+
+So my question is: what do the topic tags on Python job postings suggest about whether a beginner should start with a backend application or a machine learning project?
+
+But only looking at job postings online cannot tell me which project will get someone hired. They can give me a limited view of the work employers advertise and help me make a more informed learning choice.
+
+Collecting the data
+-------------------
+
+So I decide to use the public [Python.org Job Board](https://www.python.org/jobs/) and collect only its first listing page. Each row represents one listing URL. I will extract the title, location, topic tags, posting dates, and links.
+
+The code I use will have the about the same as our class exercise: read the HTML, select the repeated job cards, and extract one field from each card. A selector tells R which part of the page contains the information.
+
+For ethical collection as required, the code makes one job page request when it needs a new snapshot and later renders reuse the saved HTML.
+
+```{r collect-data}
+url <- "https://www.python.org/jobs/"
+html_file <- file.path(data_dir, "python_jobs.html")
+metadata_file <- file.path(data_dir, "collection_metadata.csv")
+
+# Set it FALSE will reuse the snapshot. If none exists, collect one page.
+# I will set it TRUE only if when I want to deliberately collecting a new snapshot.
+refresh <- FALSE
+new_snapshot <- refresh || !file.exists(html_file)
+
+if (new_snapshot) {
+  page <- read_html(url)
+} else {
+  page <- read_html(html_file)
+}
+
+job_cards <- page |> html_elements("ol.list-recent-jobs > li")
+
+if (length(job_cards) == 0) {
+  stop("No job cards found. Check the page before continuing.")
+}
+
+jobs_raw <- tibble(
+  title = job_cards |>
+    html_element(".listing-company-name a") |> html_text2(),
+  location = job_cards |>
+    html_element(".listing-location") |> html_text2(),
+  tags = job_cards |>
+    html_element(".listing-job-type") |> html_text2(),
+  posted_date = job_cards |>
+    html_element("time") |> html_attr("datetime"),
+  job_url = job_cards |>
+    html_element(".listing-company-name a") |> html_attr("href")
+)
+
+jobs_raw <- jobs_raw |>
+  mutate(job_url = xml2::url_absolute(job_url, url))
+
+if (any(is.na(jobs_raw$title) | str_squish(jobs_raw$title) == "") ||
+    any(is.na(jobs_raw$job_url) | jobs_raw$job_url == "")) {
+  stop("A title or link is missing. Check the extraction before continuing.")
+}
+
+if (new_snapshot) {
+  metadata <- tibble(
+    source_url = url,
+    snapshot_date_utc = format(Sys.time(), "%Y-%m-%d", tz = "UTC"),
+    retrieval_method = "Downloaded with rvest::read_html(url)",
+    scope = "First listing page only"
+  )
+  xml2::write_html(page, html_file)
+  write_csv(metadata, metadata_file)
+} else {
+  metadata <- read_csv(metadata_file, show_col_types = FALSE)
+}
+
+snapshot_date <- metadata$snapshot_date_utc[1]
+```
+
+The snapshot I used here was collected on `r snapshot_date` (UTC) and contains `r nrow(jobs_raw)` job cards. It is a snapshot of one page, not the entire Python job market.
+
+Cleaning the information
+------------------------
+
+Now I want to remove all extra spaces, convert the posting dates, and remove duplicate URLs. I also record which listings have no topic tags. Missing tags are missing information, so they do not show that a job requires none of these skills.
+
+I mainly focus on six broad labels: Back end, Machine Learning, Database, Front end, Cloud, and Web. These are selected topic labels that basically most student want to learn afterwards, and it is not an exhaustive list of employers' requirements. `str_detect()` checks whether each label appears, and `sum()` later counts the TRUE values.
+
+```{r clean-data}
+jobs <- jobs_raw |>
+  mutate(
+    title = str_squish(title),
+    location = str_squish(location),
+    tags = coalesce(str_squish(tags), ""),
+    tags_missing = tags == "",
+    posted_date = as.Date(substr(posted_date, 1, 10))
+  ) |>
+  distinct(job_url, .keep_all = TRUE) |>
+  mutate(
+    backend = str_detect(tags, fixed("Back end", ignore_case = TRUE)),
+    machine_learning = str_detect(tags, fixed("Machine Learning", ignore_case = TRUE)),
+    database = str_detect(tags, fixed("Database", ignore_case = TRUE)),
+    frontend = str_detect(tags, fixed("Front end", ignore_case = TRUE)),
+    cloud = str_detect(tags, fixed("Cloud", ignore_case = TRUE)),
+    web = str_detect(tags, fixed("Web", ignore_case = TRUE))
+  )
+
+n_total <- nrow(jobs)
+n_duplicates <- nrow(jobs_raw) - n_total
+n_missing <- sum(jobs$tags_missing)
+n_missing_dates <- sum(is.na(jobs$posted_date))
+n_missing_locations <- sum(is.na(jobs$location) | jobs$location == "")
+n_backend <- sum(jobs$backend)
+n_ml <- sum(jobs$machine_learning)
+n_both <- sum(jobs$backend & jobs$machine_learning)
+
+write_csv(jobs, file.path(data_dir, "jobs_clean.csv"))
+```
+
+After removing `r n_duplicates` duplicate URLs, I have `r n_total` listings. Of these, `r n_missing` have no topic tags, `r n_missing_dates` have missing dates, and `r n_missing_locations` have missing locations. I retain the listings without tags and include them in the denominator for the percentages below.
+
+Which topics appear most often?
+--------------------------------
+
+```{r count-topics}
+skills <- tibble(
+  skill = c("Back end", "Machine Learning", "Database",
+            "Front end", "Cloud", "Web"),
+  postings = c(n_backend, n_ml, sum(jobs$database),
+               sum(jobs$frontend), sum(jobs$cloud), sum(jobs$web))
+) |>
+  mutate(percent = round(100 * postings / n_total, 1)) |>
+  arrange(desc(postings), skill)
+```
+
+```{r topics-table, echo=FALSE}
+knitr::kable(
+  skills,
+  col.names = c("Topic tag", "Postings", "Share of all postings (%)")
+)
+```
+
+Each percentage divides the tag count by all `r n_total` listings. Since one posting can have several tags, so these percentages do not add to 100%.
+
+```{r topics-figure, out.width="100%", fig.alt="Number of sampled job postings carrying each of six selected topic tags."}
+skill_plot <- ggplot(
+  skills,
+  aes(x = reorder(skill, postings), y = postings)
+) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = postings), hjust = -0.2) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, n_total + 2)) +
+  labs(
+    title = "Which topics appear on these Python job cards?",
+    subtitle = paste(n_total, "postings; tags can overlap"),
+    x = NULL,
+    y = "Number of postings",
+    caption = paste("Source: Python.org/jobs | Snapshot:", snapshot_date, "UTC")
+  ) +
+  theme_minimal()
+
+figure_file <- file.path(results_dir, "skill_counts.png")
+ggsave(figure_file, skill_plot, width = 8, height = 5, dpi = 180)
+knitr::include_graphics(figure_file, rel_path = FALSE)
+```
+
+The Back end tag appears in `r n_backend` of `r n_total` listings (`r round(100 * n_backend / n_total, 1)`%), while Machine Learning appears in `r n_ml` (`r round(100 * n_ml / n_total, 1)`%). These numbers describe how often the labels occur in this sample. 
+
+Backend development means the part of an application that handles requests, processes information, and works with stored data and the tag is a bit broad: it does not identify a particular framework or tell me whether the position is suitable for a beginner.
+
+Do backend and machine learning appear together?
+-------------------------------------------------
+
+The ranking is useful, but the overlap matters for my learning decision, so I use `case_when()` to put each posting into exactly one group.
+
+```{r topic-overlap}
+overlap <- jobs |>
+  mutate(
+    group = case_when(
+      tags_missing ~ "No tags shown",
+      backend & machine_learning ~ "Both backend and ML",
+      backend ~ "Backend tag; no ML tag",
+      machine_learning ~ "ML tag; no backend tag",
+      TRUE ~ "Neither selected tag"
+    )
+  ) |>
+  count(group, name = "postings", sort = TRUE) |>
+  mutate(percent = round(100 * postings / n_total, 1))
+```
+
+```{r overlap-table, echo=FALSE}
+knitr::kable(
+  overlap,
+  col.names = c("Group", "Postings", "Share of all postings (%)")
+)
+```
+
+Of the `r n_ml` ML-tagged postings, `r n_both` also carry the Back end tag. There are `r n_ml - n_both` ML-tagged postings without a Back end tag. These groups are mutually exclusive and account for all listings; their percentages sum to approximately 100%, allowing for rounding.
+
+What I would build next
+-----------------------
+
+```{r recommendation, echo=FALSE, results='asis'}
+if (n_backend >= n_ml && n_backend > 0) {
+  cat("For my next general Python project, I would start with a small backend application. Backend appears at least as often as ML in this sample, so it is a reasonable area to prioritize when choosing between the two.\n\n")
+  cat("I would build an application tracker that lets a user add a job application, update its status, and retrieve saved records. Next, I would connect it to a small database and check how it handles missing or invalid inputs.\n\n")
+} else if (n_ml > 0) {
+  cat("For my next project, I would start with a small machine learning task because ML appears more often than backend in this sample. One example is a job description classifier: collect a small set of hand-labeled examples, build a simple model, and evaluate it on examples kept out of training.\n\n")
+} else {
+  cat("These two tags do not provide a basis for choosing between backend and ML in this snapshot. I would first read several full descriptions from the most common topic group and use those requirements to choose a small project.\n\n")
+}
+
+if (n_both > 0) {
+  cat("The overlap also gives me a reason to connect the two areas. For a project that combines both, I could connect the job description classifier to the application tracker and show its prediction through the application. That would let me practice using a model inside a working application.\n\n")
+}
+```
+
+This is my proposed learning sequence. The listings do not specifically request an application tracker, a particular database, or one framework. The practical decision is about what to build next, not a claim that one project guarantees employment.
+
+Limits of the analysis
+----------------------
+
+This is a small, international sample from the first page of one job board and it is not a random sample of Python jobs. So the employers may appear more than once, and different URLs do not necessarily represent different vacancies.
+
+The tags are broad descriptions rather than a complete reading of each job's requirements as I did not measure experience requirements, salaries, applicant competition, or hiring outcomes. So, I cannot conclude that the postings are entry level jobs or that learning a frequent topic causes a higher chance of receiving an offer.
+
+The takeaway is to use the frequency and overlap of these tags as one input into a learning decision. Before applying for a role, I would still read the full description and compare its requirements with my experience.
+
+Reproducing the analysis
+------------------------
+
+All R code and writing are in this post's `index.qmd`. The `data` folder stores the saved source HTML, collection metadata, and cleaned data. The `results` folder stores the chart. The tables I created are generated directly in the rendered blog. With `refresh <- FALSE`, rendering reuses the saved HTML when it exists.
+
+[Code, data, and replication instructions](https://github.com/LeeBABA999/aeds-website.git).
+
+Sources: [Python.org Job Board](https://www.python.org/jobs/),  [rvest documentation](https://rvest.tidyverse.org/reference/html_element.html).
