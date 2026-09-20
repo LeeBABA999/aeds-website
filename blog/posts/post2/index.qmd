@@ -242,7 +242,6 @@ ggsave(
 # Display the chart in the rendered blog.
 print(skill_plot)
 ```
-```
 
 The Back end tag appears in `r n_backend` of `r n_total` listings (`r round(100 * n_backend / n_total, 1)`%), while Machine Learning appears in `r n_ml` (`r round(100 * n_ml / n_total, 1)`%). These numbers describe how often the labels occur in this sample. 
 
