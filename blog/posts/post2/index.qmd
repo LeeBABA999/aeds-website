@@ -107,6 +107,13 @@ if (new_snapshot) {
 }
 
 snapshot_date <- metadata$snapshot_date_utc[1]
+
+# Display the first five collected listings.
+knitr::kable(
+  jobs_raw |> select(title, location, posted_date) |> head(5),
+  col.names = c("Job title", "Location", "Posting date"),
+  caption = "First five collected listings"
+)
 ```
 
 The snapshot I used here was collected on `r snapshot_date` (UTC) and contains `r nrow(jobs_raw)` job cards. It is a snapshot of one page, not the entire Python job market.
@@ -147,6 +154,31 @@ n_ml <- sum(jobs$machine_learning)
 n_both <- sum(jobs$backend & jobs$machine_learning)
 
 write_csv(jobs, file.path(data_dir, "jobs_clean.csv"))
+
+# Display the cleaning checks.
+quality <- tibble(
+  Check = c(
+    "Job cards extracted",
+    "Unique listing URLs",
+    "Duplicate URLs removed",
+    "Listings without topic tags",
+    "Listings with missing dates",
+    "Listings with missing locations"
+  ),
+  Count = c(
+    nrow(jobs_raw),
+    n_total,
+    n_duplicates,
+    n_missing,
+    n_missing_dates,
+    n_missing_locations
+  )
+)
+
+knitr::kable(
+  quality,
+  caption = "Data checks after cleaning"
+)
 ```
 
 After removing `r n_duplicates` duplicate URLs, I have `r n_total` listings. Of these, `r n_missing` have no topic tags, `r n_missing_dates` have missing dates, and `r n_missing_locations` have missing locations. I retain the listings without tags and include them in the denominator for the percentages below.
@@ -174,7 +206,7 @@ knitr::kable(
 
 Each percentage divides the tag count by all `r n_total` listings. Since one posting can have several tags, so these percentages do not add to 100%.
 
-```{r topics-figure, out.width="100%", fig.alt="Number of sampled job postings carrying each of six selected topic tags."}
+```{r topics-figure, fig.width=8, fig.height=5, out.width="100%", fig.alt="Number of sampled job postings carrying each of six selected topic tags."}
 skill_plot <- ggplot(
   skills,
   aes(x = reorder(skill, postings), y = postings)
@@ -188,13 +220,28 @@ skill_plot <- ggplot(
     subtitle = paste(n_total, "postings; tags can overlap"),
     x = NULL,
     y = "Number of postings",
-    caption = paste("Source: Python.org/jobs | Snapshot:", snapshot_date, "UTC")
+    caption = paste(
+      "Source: Python.org/jobs | Snapshot:",
+      snapshot_date,
+      "UTC"
+    )
   ) +
   theme_minimal()
 
+# Save the chart as a PNG file.
 figure_file <- file.path(results_dir, "skill_counts.png")
-ggsave(figure_file, skill_plot, width = 8, height = 5, dpi = 180)
-knitr::include_graphics(figure_file, rel_path = FALSE)
+
+ggsave(
+  filename = figure_file,
+  plot = skill_plot,
+  width = 8,
+  height = 5,
+  dpi = 180
+)
+
+# Display the chart in the rendered blog.
+print(skill_plot)
+```
 ```
 
 The Back end tag appears in `r n_backend` of `r n_total` listings (`r round(100 * n_backend / n_total, 1)`%), while Machine Learning appears in `r n_ml` (`r round(100 * n_ml / n_total, 1)`%). These numbers describe how often the labels occur in this sample. 
