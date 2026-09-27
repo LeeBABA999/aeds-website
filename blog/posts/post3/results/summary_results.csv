@@ -1,0 +1,45 @@
+YEAR,education,observations,months,unemployment_rate,result,rate_2019,rate_2020,change_pp,age_group
+2019,Less than high school,36314,12,5.5017892872515075,annual_rates,NA,NA,NA,NA
+2019,High school,147473,12,3.777855576400048,annual_rates,NA,NA,NA,NA
+2019,Some college / associate,154233,12,3.0628953054434818,annual_rates,NA,NA,NA,NA
+2019,Bachelor's or more,233918,12,2.0568975189099987,annual_rates,NA,NA,NA,NA
+2020,Less than high school,28256,12,11.732997395597565,annual_rates,NA,NA,NA,NA
+2020,High school,125782,12,9.08534329603806,annual_rates,NA,NA,NA,NA
+2020,Some college / associate,133196,12,7.729283917578912,annual_rates,NA,NA,NA,NA
+2020,Bachelor's or more,214050,12,4.718333953124915,annual_rates,NA,NA,NA,NA
+2021,Less than high school,29083,12,8.557769730669122,annual_rates,NA,NA,NA,NA
+2021,High school,126471,12,6.500803892705613,annual_rates,NA,NA,NA,NA
+2021,Some college / associate,130091,12,5.246260485650939,annual_rates,NA,NA,NA,NA
+2021,Bachelor's or more,215165,12,3.0119479390428827,annual_rates,NA,NA,NA,NA
+2022,Less than high school,27734,12,5.598296785893315,annual_rates,NA,NA,NA,NA
+2022,High school,121563,12,4.076733400973941,annual_rates,NA,NA,NA,NA
+2022,Some college / associate,121179,12,3.200458417715993,annual_rates,NA,NA,NA,NA
+2022,Bachelor's or more,208968,12,1.9601591769482098,annual_rates,NA,NA,NA,NA
+2023,Less than high school,27501,12,5.739538633619805,annual_rates,NA,NA,NA,NA
+2023,High school,118441,12,4.05435903330828,annual_rates,NA,NA,NA,NA
+2023,Some college / associate,117463,12,3.094958894200348,annual_rates,NA,NA,NA,NA
+2023,Bachelor's or more,206796,12,2.061000789615562,annual_rates,NA,NA,NA,NA
+2024,Less than high school,27176,12,6.342680134078841,annual_rates,NA,NA,NA,NA
+2024,High school,117750,12,4.361880770659861,annual_rates,NA,NA,NA,NA
+2024,Some college / associate,115787,12,3.4412115349518695,annual_rates,NA,NA,NA,NA
+2024,Bachelor's or more,208032,12,2.322095922098549,annual_rates,NA,NA,NA,NA
+NA,Less than high school,NA,NA,NA,change_2019_2020,5.5017892872515075,11.732997395597565,6.231208108346057,NA
+NA,High school,NA,NA,NA,change_2019_2020,3.777855576400048,9.08534329603806,5.3074877196380115,NA
+NA,Some college / associate,NA,NA,NA,change_2019_2020,3.0628953054434818,7.729283917578912,4.66638861213543,NA
+NA,Bachelor's or more,NA,NA,NA,change_2019_2020,2.0568975189099987,4.718333953124915,2.6614364342149166,NA
+2024,Less than high school,5668,12,8.586344895483432,age_rates_2024,NA,NA,NA,25–34
+2024,High school,32294,12,5.986293134238923,age_rates_2024,NA,NA,NA,25–34
+2024,Some college / associate,29022,12,4.462487809607848,age_rates_2024,NA,NA,NA,25–34
+2024,Bachelor's or more,54003,12,2.911007190787791,age_rates_2024,NA,NA,NA,25–34
+2024,Less than high school,7606,12,6.36035437820893,age_rates_2024,NA,NA,NA,35–44
+2024,High school,29948,12,4.744845426219395,age_rates_2024,NA,NA,NA,35–44
+2024,Some college / associate,31046,12,3.418529194191796,age_rates_2024,NA,NA,NA,35–44
+2024,Bachelor's or more,61294,12,2.0604733963950554,age_rates_2024,NA,NA,NA,35–44
+2024,Less than high school,7651,12,5.249762959945874,age_rates_2024,NA,NA,NA,45–54
+2024,High school,27742,12,3.3526043680279805,age_rates_2024,NA,NA,NA,45–54
+2024,Some college / associate,28657,12,2.986679812017516,age_rates_2024,NA,NA,NA,45–54
+2024,Bachelor's or more,52458,12,1.908836288761565,age_rates_2024,NA,NA,NA,45–54
+2024,Less than high school,6251,12,5.624412981320288,age_rates_2024,NA,NA,NA,55–64
+2024,High school,27766,12,2.8131326068775375,age_rates_2024,NA,NA,NA,55–64
+2024,Some college / associate,27062,12,2.69021024692146,age_rates_2024,NA,NA,NA,55–64
+2024,Bachelor's or more,40277,12,2.409003354062549,age_rates_2024,NA,NA,NA,55–64

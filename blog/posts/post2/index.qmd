@@ -14,22 +14,27 @@ execute:
 ---
 
 ```{r setup, include=FALSE}
+library(here)
 library(rvest)
 library(tidyverse)
 
-input_file <- knitr::current_input(dir = TRUE)
+# Find the project directory
+project_dir <- here()
 
-if (is.null(input_file)) {
-  post_dir <- getwd()
-} else {
-  post_dir <- dirname(input_file)
-}
+# Create paths
+data_dir <- here("blog", "posts", "post2", "data")
+code_dir <- here("blog", "posts", "post2")
+results_dir <- here("blog", "posts", "post2", "results")
+tables_dir <- here("blog", "posts", "post2", "results", "tables")
+figures_dir <- here("blog", "posts", "post2", "results", "figures")
 
-data_dir <- file.path(post_dir, "data")
-results_dir <- file.path(post_dir, "results")
+# Create directories if they do not already exist
+dir.create(data_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(code_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(results_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(figures_dir, showWarnings = FALSE, recursive = TRUE)
 
-dir.create(data_dir, showWarnings = FALSE)
-dir.create(results_dir, showWarnings = FALSE)
 ```
 
 The question
@@ -48,7 +53,7 @@ So I decide to use the public [Python.org Job Board](https://www.python.org/jobs
 
 The code I use will have the about the same as our class exercise: read the HTML, select the repeated job cards, and extract one field from each card. A selector tells R which part of the page contains the information.
 
-For ethical collection as required, the code makes one job page request when it needs a new snapshot and later renders reuse the saved HTML.
+For ethical collection as required, the code does not bypass logins, CAPTCHAs, paywalls, or other access restrictions. If the website denies access, I would stop collecting.
 
 ```{r collect-data}
 url <- "https://www.python.org/jobs/"
@@ -144,6 +149,22 @@ jobs <- jobs_raw |>
     web = str_detect(tags, fixed("Web", ignore_case = TRUE))
   )
 
+#save the cleaned data
+write.csv(
+  jobs,
+  here("blog", "posts", "post2", "data", "jobs_clean.csv"),
+  row.names = FALSE
+)
+
+#read the saved data for the analysis
+jobs <- read.csv(
+  here("blog", "posts", "post2", "data", "jobs_clean.csv"),
+  stringsAsFactors = FALSE
+)
+
+#convert posting dates back to dates after reading the CSV
+jobs$posted_date <- as.Date(jobs$posted_date)
+
 n_total <- nrow(jobs)
 n_duplicates <- nrow(jobs_raw) - n_total
 n_missing <- sum(jobs$tags_missing)
@@ -153,9 +174,7 @@ n_backend <- sum(jobs$backend)
 n_ml <- sum(jobs$machine_learning)
 n_both <- sum(jobs$backend & jobs$machine_learning)
 
-write_csv(jobs, file.path(data_dir, "jobs_clean.csv"))
-
-# Display the cleaning checks.
+#display the cleaning checks.
 quality <- tibble(
   Check = c(
     "Job cards extracted",
@@ -173,6 +192,12 @@ quality <- tibble(
     n_missing_dates,
     n_missing_locations
   )
+)
+
+write.csv(
+  quality,
+  here("blog", "posts", "post2", "results", "tables", "data_quality.csv"),
+  row.names = FALSE
 )
 
 knitr::kable(
@@ -195,6 +220,12 @@ skills <- tibble(
 ) |>
   mutate(percent = round(100 * postings / n_total, 1)) |>
   arrange(desc(postings), skill)
+
+write.csv(
+  skills,
+  here("blog", "posts", "post2", "results", "tables", "skill_summary.csv"),
+  row.names = FALSE
+)
 ```
 
 ```{r topics-table, echo=FALSE}
@@ -228,19 +259,20 @@ skill_plot <- ggplot(
   ) +
   theme_minimal()
 
-# Save the chart as a PNG file.
-figure_file <- file.path(results_dir, "skill_counts.png")
+#display the figure
+skill_plot
 
+#save the figure
 ggsave(
-  filename = figure_file,
+  filename = here(
+    "blog", "posts", "post2",
+    "results", "figures", "skill_counts.png"
+  ),
   plot = skill_plot,
   width = 8,
   height = 5,
   dpi = 180
 )
-
-# Display the chart in the rendered blog.
-print(skill_plot)
 ```
 
 The Back end tag appears in `r n_backend` of `r n_total` listings (`r round(100 * n_backend / n_total, 1)`%), while Machine Learning appears in `r n_ml` (`r round(100 * n_ml / n_total, 1)`%). These numbers describe how often the labels occur in this sample. 
@@ -265,6 +297,12 @@ overlap <- jobs |>
   ) |>
   count(group, name = "postings", sort = TRUE) |>
   mutate(percent = round(100 * postings / n_total, 1))
+
+write.csv(
+  overlap,
+  here("blog", "posts", "post2", "results", "tables", "topic_overlap.csv"),
+  row.names = FALSE
+)
 ```
 
 ```{r overlap-table, echo=FALSE}
@@ -308,7 +346,7 @@ The takeaway is to use the frequency and overlap of these tags as one input into
 Reproducing the analysis
 ------------------------
 
-All R code and writing are in this post's `index.qmd`. The `data` folder stores the saved source HTML, collection metadata, and cleaned data. The `results` folder stores the chart. The tables I created are generated directly in the rendered blog. With `refresh <- FALSE`, rendering reuses the saved HTML when it exists.
+All of my code and writing are in this post's index.qmd. The data folder contains the saved webpage, collection metadata, and cleaned dataset. I save the numerical results in results/tables and the chart in results/figures. These results also appear in the blog. With refresh set to FALSE, the analysis uses the saved webpage so someone else can work with the same listings. The repository README explains how to install the packages and run the analysis.
 
 [Code, data, and replication instructions](https://github.com/LeeBABA999/aeds-website.git).
 
