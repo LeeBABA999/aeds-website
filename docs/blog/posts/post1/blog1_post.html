@@ -8,7 +8,7 @@
 
 <meta name="dcterms.date" content="2026-09-13">
 
-<title>Michael Li - Why Do Some Arrows Stay on the Same Line?</title>
+<title>Michael Li - Why Do the Arrows That Stay on the Same Line Matter So Much?</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -176,7 +176,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Why Do Some Arrows Stay on the Same Line?</h1>
+<h1 class="title">Why Do the Arrows That Stay on the Same Line Matter So Much?</h1>
   <div class="quarto-categories">
     <div class="quarto-category">mathematics</div>
     <div class="quarto-category">data-science</div>
@@ -201,15 +201,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p>Eigenvalues and eigenvectors sound intimidating for some people who are not familiar with it. But actually the main idea of it starts with something simple: an arrow. When a matrix changes an arrow, some arrows stay on the same line. These are eigenvectors, and their eigenvalues describe how they are scaled.</p>
-<p>This can be hard to see when a matrix is introduced as a box of numbers at the first time we saw them. We get busy multiplying entries and lose track of what the calculation does. Here is a picture that maybe can make the idea easier to follow for you.</p>
+<p>Eigenvalues and eigenvectors sound intimidating for some people who are not familiar with them. But actually the main idea starts with something simple: an arrow. When a matrix changes an arrow, some arrows stay on the same line. These are eigenvectors, and their eigenvalues describe how they are scaled.</p>
+<p>This can be hard to see when a matrix is introduced as a box of numbers the first time we see one. We get busy multiplying entries and lose track of what the calculation does.</p>
+<p>But even after I got the picture, one thing still bugged me quite a while. These arrows are actually pretty rare. If you take a typical matrix and apply it to a random arrow, the arrow almost always turns. In the plane, these special arrows fill at most two lines. And yet, eigenvectors seem to show up everythere in datascience. OCA uses them, Markov chains use them, and even Google’s original PageRank scores, which Google used to rank webpages, come from an eigenvector. Most explanations I’ve seen on textbooks focus on how to calculate those eigenvectors, not on why these few special arrows are such a big deal.</p>
+<p>That is the question I want to figure out in my first blog post: if almost every arrow turns, what do the few arrows that don’t turn tell us about all the other ones? I’ll start with a small example and a picture that may make the idea easier to follow for you. Then we’ll do a little experiment in R and keep applying the sma matrix over and over, a bit like how a Markow chain moves forward one step at a time, and see where the turning arrows end up.</p>
 <section id="a-small-example" class="level2">
 <h2 class="anchored" data-anchor-id="a-small-example">A small example</h2>
 <p>Let’s use this matrix as an example:</p>
 <p><span class="math display">\[
 A = \begin{pmatrix}2 &amp; 1 \\ 1 &amp; 2\end{pmatrix}.
 \]</span></p>
-<p>Think of a vector as an arrow starting at the origin. The vector <span class="math inline">\((1,1)\)</span> ends one unit right and one unit up. This R code for you to see applies the matrix to that arrow. The symbol <code>%*%</code> means matrix multiplication.</p>
+<p>Think of a vector as an arrow starting at the origin. The vector <span class="math inline">\((1,1)\)</span> ends one unit right and one unit up. This R code applies the matrix to that arrow. The symbol <code>%*%</code> means matrix multiplication.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>A <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>), <span class="at">nrow =</span> <span class="dv">2</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>)</span>
@@ -257,7 +259,12 @@ A = \begin{pmatrix}2 &amp; 1 \\ 1 &amp; 2\end{pmatrix}.
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="st">"Before"</span>, <span class="at">pos =</span> <span class="dv">2</span>)</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="dv">2</span>, <span class="dv">1</span>, <span class="st">"After"</span>, <span class="at">pos =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="blog1_post_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="blog1_post_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+<p></p><figcaption class="figure-caption">The blue arrow (1, 0) is the original vector. The red arrow (2, 1) points in a new direction, so (1, 0) is not an eigenvector.</figcaption><p></p>
+</figure>
+</div>
 </div>
 </div>
 <p>One detail matters: an arrow is an eigenvector of a particular matrix. A different matrix might turn that same arrow. So the special relationship is between the arrow and the transformation we apply.</p>
@@ -271,11 +278,195 @@ Av = \lambda v, \qquad v \ne 0.
 <p>Here, <span class="math inline">\(v\)</span> is an eigenvector and <span class="math inline">\(\lambda\)</span> is its eigenvalue. For this particular vector, multiplying by the matrix does the same thing as multiplying by one number.</p>
 <p>An eigenvalue of one leaves the arrow unchanged. A negative eigenvalue reverses it along the same line. An eigenvalue of zero collapses it to the origin. The zero vector itself is excluded because it has no direction.</p>
 </section>
-<section id="why-this-is-useful" class="level2">
-<h2 class="anchored" data-anchor-id="why-this-is-useful">Why this is useful</h2>
-<p>If we keep applying our matrix to <span class="math inline">\((1,0)\)</span>, we get <span class="math inline">\((2,1)\)</span>, then <span class="math inline">\((5,4)\)</span>, then <span class="math inline">\((14,13)\)</span>. The arrow gets closer to the diagonal direction of <span class="math inline">\((1,1)\)</span>.</p>
-<p>That happens because the part along this eigenvector grows faster than the other part. An arrow starting exactly along the other eigenvector, <span class="math inline">\((1,-1)\)</span>, would stay unchanged instead.</p>
-<p>Eigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. Together, they make it easier to understand how a system changes over time.</p>
+<section id="so-where-do-the-turning-arrows-go" class="level2">
+<h2 class="anchored" data-anchor-id="so-where-do-the-turning-arrows-go">So where do the turning arrows go?</h2>
+<p>If we keep applying our matrix to <span class="math inline">\((1,0)\)</span>, we get <span class="math inline">\((2,1)\)</span>, then <span class="math inline">\((5,4)\)</span>, then <span class="math inline">\((14,13)\)</span>. The arrow gets closer to the diagonal direction of <span class="math inline">\((1,1)\)</span>. But how close, and how fast? Let’s track it. The code below applies <span class="math inline">\(A\)</span> six times and measures the angle between the arrow and the diagonal line through <span class="math inline">\((1,1)\)</span> after each step.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Angle, in degrees, between an arrow and the diagonal line through (1, 1)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>angle_to_diagonal <span class="ot">&lt;-</span> <span class="cf">function</span>(v) {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># size of the part along (1, 1)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  along  <span class="ot">&lt;-</span> <span class="fu">abs</span>(v[<span class="dv">1</span>] <span class="sc">+</span> v[<span class="dv">2</span>]) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># size of the part along (1, -1)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  across <span class="ot">&lt;-</span> <span class="fu">abs</span>(v[<span class="dv">1</span>] <span class="sc">-</span> v[<span class="dv">2</span>]) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span>)  </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">atan2</span>(across, along) <span class="sc">*</span> <span class="dv">180</span> <span class="sc">/</span> pi</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>trajectory <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (step <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">6</span>) {</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  trajectory <span class="ot">&lt;-</span> <span class="fu">rbind</span>(trajectory,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">data.frame</span>(<span class="at">step =</span> step, <span class="at">x =</span> v[<span class="dv">1</span>], <span class="at">y =</span> v[<span class="dv">2</span>],</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">angle =</span> <span class="fu">angle_to_diagonal</span>(v)))</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  v <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(A <span class="sc">%*%</span> v)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(trajectory, <span class="at">digits =</span> <span class="dv">2</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>             <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Step"</span>, <span class="st">"x"</span>, <span class="st">"y"</span>, <span class="st">"Angle to diagonal (degrees)"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Step</th>
+<th style="text-align: right;">x</th>
+<th style="text-align: right;">y</th>
+<th style="text-align: right;">Angle to diagonal (degrees)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">45.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">18.43</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">6.34</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2.12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.71</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">121</td>
+<td style="text-align: right;">0.24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">365</td>
+<td style="text-align: right;">364</td>
+<td style="text-align: right;">0.08</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The angle starts at 45 degrees and drops below a tenth of a degree after just six steps. And if you look at the numbers closely, there’s a pattern. After the first step, each angle is about three times smaller than the one before it: 18.43, 6.34, 2.12, 0.71. Why three?</p>
+<p>That happens because the part along the eigenvector <span class="math inline">\((1,1)\)</span> grows faster than the other part. Here’s what I mean: we can split any arrow into two pieces: one piece along <span class="math inline">\((1,1)\)</span> and one piece along the other eigenvector of <span class="math inline">\(A\)</span>, which is <span class="math inline">\((1,-1)\)</span>. For example, <span class="math inline">\((1,0)\)</span> is just half of <span class="math inline">\((1,1)\)</span> plus half of <span class="math inline">\((1,-1)\)</span>. Every time we apply <span class="math inline">\(A\)</span>, the <span class="math inline">\((1,1)\)</span> piece gets multiplied by its eigenvalue, 3, and the <span class="math inline">\((1,-1)\)</span> piece gets multiplied by its eigenvalue, 1, so it doesn’t change at all. After <span class="math inline">\(k\)</span> steps we get</p>
+<p><span class="math display">\[
+A^k \begin{pmatrix}1 \\ 0\end{pmatrix} = \frac{3^k}{2}\begin{pmatrix}1 \\ 1\end{pmatrix} + \frac{1}{2}\begin{pmatrix}1 \\ -1\end{pmatrix}.
+\]</span></p>
+<p>Every step, the <span class="math inline">\((1,1)\)</span> piece gets three times bigger compared to the other piece, so the arrow leans more and more toward the diagonal. That’s where the three comes from. It’s just the ratio of the two eigenvalues, 3 divided by 1.</p>
+<p>At this point I wondered if <span class="math inline">\((1,0)\)</span> was just a lucky choice. To check, I tried sixteen arrows pointing in all different directions. I applied <span class="math inline">\(A\)</span> to each of them five times, and then shrank every arrow back to length one so we only compare directions.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>directions <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">337.5</span>, <span class="at">by =</span> <span class="fl">22.5</span>) <span class="sc">*</span> pi <span class="sc">/</span> <span class="dv">180</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># one arrow per column</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>before <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">cos</span>(directions), <span class="fu">sin</span>(directions))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>after <span class="ot">&lt;-</span> before</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (step <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) after <span class="ot">&lt;-</span> A <span class="sc">%*%</span> after</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># rescale to length one</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>after <span class="ot">&lt;-</span> <span class="fu">sweep</span>(after, <span class="dv">2</span>, <span class="fu">sqrt</span>(<span class="fu">colSums</span>(after<span class="sc">^</span><span class="dv">2</span>)), <span class="st">"/"</span>)  </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># the two arrows that start exactly along the other eigenvector, (1, -1)</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>on_other_line <span class="ot">&lt;-</span> <span class="fu">abs</span>(before[<span class="dv">1</span>, ] <span class="sc">+</span> before[<span class="dv">2</span>, ]) <span class="sc">&lt;</span> <span class="fl">1e-8</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>arrow_col <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(on_other_line, <span class="st">"#CD6600"</span>, <span class="st">"blue"</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>panels <span class="ot">&lt;-</span> <span class="fu">list</span>(before, after)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>titles <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Before"</span>, <span class="st">"After applying A five times"</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="at">type =</span> <span class="st">"n"</span>, <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.1</span>, <span class="fl">1.1</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.1</span>, <span class="fl">1.1</span>),</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"x"</span>, <span class="at">ylab =</span> <span class="st">"y"</span>, <span class="at">asp =</span> <span class="dv">1</span>, <span class="at">main =</span> titles[i])</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abline</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"gray50"</span>)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrows</span>(<span class="dv">0</span>, <span class="dv">0</span>, panels[[i]][<span class="dv">1</span>, ], panels[[i]][<span class="dv">2</span>, ],</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">col =</span> arrow_col, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">length =</span> <span class="fl">0.08</span>)</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="blog1_post_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="768"></p>
+<p></p><figcaption class="figure-caption">Left: sixteen arrows before applying A. Right: the same arrows after applying A five times, rescaled to length one. The blue arrows all end up on the dashed diagonal line. The two orange arrows start on the line through (1, -1) and stay there.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p>It wasn’t luck. Fourteen of the sixteen arrows end up on the diagonal line. Some point toward <span class="math inline">\((1,1)\)</span> and some toward <span class="math inline">\((-1,-1)\)</span>, but it’s the same line. The only two that don’t are the orange ones. An arrow starting exactly along the other eigenvector, <span class="math inline">\((1,-1)\)</span>, would stay unchanged instead, because its eigenvalue is 1. But these two only survive because they start exactly on that line. If you push one of them even a tiny bit off of it, that tiny piece along <span class="math inline">\((1,1)\)</span> gets tripled every step, and eventually it takes over too.</p>
+</section>
+<section id="does-it-matter-how-far-apart-the-eigenvalues-are" class="level2">
+<h2 class="anchored" data-anchor-id="does-it-matter-how-far-apart-the-eigenvalues-are">Does it matter how far apart the eigenvalues are?</h2>
+<p>If the three really comes from dividing the two eigenvalues, then the speed should change when the eigenvalues get closer together. I wanted to check this, so I made a second matrix, <span class="math inline">\(B\)</span>. It has the same eigenvectors as <span class="math inline">\(A\)</span>, and its biggest eigenvalue is still 3. The only difference is that its other eigenvalue is 2.7 instead of 1:</p>
+<p><span class="math display">\[
+B = \begin{pmatrix}2.85 &amp; 0.15 \\ 0.15 &amp; 2.85\end{pmatrix}.
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>B <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">2.85</span>, <span class="fl">0.15</span>, <span class="fl">0.15</span>, <span class="fl">2.85</span>), <span class="at">nrow =</span> <span class="dv">2</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">eigen</span>(A)<span class="sc">$</span>values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3 1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">eigen</span>(B)<span class="sc">$</span>values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3.0 2.7</code></pre>
+</div>
+</div>
+<p>R confirms it: <span class="math inline">\(A\)</span> has eigenvalues 3 and 1, and <span class="math inline">\(B\)</span> has 3 and 2.7. Now let’s start both matrices from <span class="math inline">\((1,0)\)</span>, apply each one 40 times, and watch the angle.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>track_angle <span class="ot">&lt;-</span> <span class="cf">function</span>(M, v, n_steps) {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  angles <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_steps <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span>n_steps) {</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    angles[k <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">angle_to_diagonal</span>(v)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    v <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(M <span class="sc">%*%</span> v)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  angles</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>steps <span class="ot">&lt;-</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">40</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>angle_A <span class="ot">&lt;-</span> <span class="fu">track_angle</span>(A, <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>), <span class="dv">40</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>angle_B <span class="ot">&lt;-</span> <span class="fu">track_angle</span>(B, <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>), <span class="dv">40</span>)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co"># First step at which the arrow is within one degree of the diagonal</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">A =</span> <span class="fu">min</span>(steps[angle_A <span class="sc">&lt;</span> <span class="dv">1</span>]), <span class="at">B =</span> <span class="fu">min</span>(steps[angle_B <span class="sc">&lt;</span> <span class="dv">1</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> A  B 
+ 4 39 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(steps, angle_B, <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">45</span>),</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Number of times the matrix is applied"</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Angle to diagonal (degrees)"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(steps, angle_A, <span class="at">col =</span> <span class="st">"blue"</span>, <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="dv">1</span>, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"gray50"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="fl">2.3</span>, <span class="fl">7.5</span>, <span class="st">"A"</span>, <span class="at">pos =</span> <span class="dv">4</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="dv">12</span>, <span class="dv">19</span>, <span class="st">"B"</span>, <span class="at">pos =</span> <span class="dv">4</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">"A: eigenvalues 3 and 1"</span>, <span class="st">"B: eigenvalues 3 and 2.7"</span>),</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"red"</span>), <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">bty =</span> <span class="st">"n"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="blog1_post_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+<p></p><figcaption class="figure-caption">How far the arrow is from the diagonal after each step, starting from (1, 0). The dashed line marks one degree. A gets there after 4 steps, while B needs 39.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This was the part that surprised me the most. Both matrices stretch <span class="math inline">\((1,1)\)</span> by exactly 3, so if you only looked at the biggest eigenvalue, you would think they behave the same. They don’t. With <span class="math inline">\(A\)</span>, the arrow is within one degree of the diagonal after 4 steps. With <span class="math inline">\(B\)</span>, it takes 39 steps, almost ten times longer. The reason is the same as before: each step, the <span class="math inline">\((1,1)\)</span> piece gains on the other piece by the ratio of the eigenvalues. For <span class="math inline">\(A\)</span> that ratio is <span class="math inline">\(3/1 = 3\)</span>, but for <span class="math inline">\(B\)</span> it is only <span class="math inline">\(3/2.7 \approx 1.11\)</span>. That’s why, with <span class="math inline">\(B\)</span>, the arrow keeps “remembering” where it started for so long.</p>
+</section>
+<section id="what-i-learned-from-this" class="level2">
+<h2 class="anchored" data-anchor-id="what-i-learned-from-this">What I learned from this</h2>
+<p>Eigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. Together, they make it easier to understand how a system changes over time. That’s the textbook summary, and it’s true, but it felt pretty abstract to me until I actually ran these experiments. Two things finally clicked.</p>
+<p>The first is that eigenvectors are not just weird exceptions. I used to think of them as the few arrows that happen not to turn. But if you apply the same matrix again and again, almost every arrow ends up lining up with the eigenvector that has the biggest eigenvalue. So the eigenvector is basically telling you where everything is heading. I think this is why eigenvectors show up in Markov chains and PageRank. In both cases, what we care about is where a process ends up after many steps, and that answer is an eigenvector. Even for PCA, one classic way to find the first principal component, called the power method, uses the same trick of multiplying by a matrix (the covariance matrix) over and over.</p>
+<p>The second is that computing the eigenvalues isn’t enough. We should also compare them. The biggest eigenvalue tells us which direction wins in the end, but how close the second one is to the biggest tells us how long that takes. With 3 and 1 it took 4 steps; with 3 and 2.7 it took 39. I find it helpful to think about this with a labor market example. In a simple model where workers move between having a job and being unemployed each month, this ratio decides whether a jump in unemployment fades in a few months or sticks around for a long time.</p>
+<p>One thing we need to be careful about, though: this only works when one eigenvalue is strictly bigger in size than all the others. For example, a matrix that rotates every arrow by 90 degrees has no real eigenvectors at all, so the arrows just keep spinning around and never settle on any line.</p>
+<p>So, back to my question. The few arrows that don’t turn matter because they tell us where all the other arrows are going, and the eigenvalues tell us how fast they get there. For me, that’s a much more useful way to think about eigenvectors than just remembering <span class="math inline">\(Av = \lambda v\)</span>.</p>
 
 
 </section>
