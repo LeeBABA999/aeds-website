@@ -1,0 +1,201 @@
+---
+title: "Did Paychecks Keep Up With Prices?"
+author: "Michael Li"
+date: "2026-10-04"
+categories: [Data Viz, inflation, Python]
+format:
+  html:
+    code-fold: true
+    embed-resources: true
+engine: knitr
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| include: false
+Sys.setenv(RETICULATE_PYTHON = path.expand("~/aeds6400-python/bin/python"))
+```
+
+## Why I looked at this
+
+In 2022 it felt like everyone I knew was complaining about prices: rent, groceries, gas. But a lot of people also got big raises around the same time. So which one won?
+
+**My question: since COVID started, have paychecks kept up with prices, and did some industries do better than others?**
+
+This matters because the number on your paycheck isn't really what you live on. If your pay goes up 10% but prices go up 15%, you can buy less than before. Economists call the paycheck number the *nominal* wage and what it can buy the *real* wage. The real wage is the one people actually feel.
+
+## Data
+
+All my data comes from FRED, the St. Louis Fed's database, which gets it from the Bureau of Labor Statistics. I use average hourly earnings for all private-sector workers (`CES0500000003`), the same series for 13 industries, and the Consumer Price Index (`CPIAUCSL`). Everything is monthly and seasonally adjusted.
+
+I compare February 2020, the last month before COVID hit, with August 2026, the newest month that has both wages and prices. My code downloads each series from FRED the first time it runs and saves a copy in `data/raw/`, so the results don't change every time I render.
+
+```{python}
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+
+for folder in ["data/raw", "data/processed", "results/figures", "results/tables"]:
+    os.makedirs(folder, exist_ok=True)
+
+# download a series from FRED once, then reuse the saved csv
+def get_fred(series_id):
+    path = "data/raw/" + series_id + ".csv"
+    if not os.path.exists(path):
+        url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=" + series_id
+        pd.read_csv(url).to_csv(path, index=False)
+    df = pd.read_csv(path)
+    df.columns = ["date", "value"]
+    df["date"] = pd.to_datetime(df["date"])
+    return df
+
+wages = get_fred("CES0500000003").rename(columns={"value": "wage"})
+cpi = get_fred("CPIAUCSL").rename(columns={"value": "cpi"})
+```
+
+## Adjusting for inflation
+
+To compare pay across years, I turned every month's wage into August 2026 dollars:
+
+`real wage = wage * CPI(Aug 2026) / CPI(that month)`
+
+I also calculated 12-month growth rates for wages and prices, which is how inflation is usually reported in the news.
+
+```{python}
+df = wages.merge(cpi, on="date")
+
+# growth compared to the same month last year (%)
+df["wage_growth"] = (df["wage"] / df["wage"].shift(12) - 1) * 100
+df["inflation"] = (df["cpi"] / df["cpi"].shift(12) - 1) * 100
+
+# keep Jan 2019 to Aug 2026
+df = df[(df["date"] >= "2019-01-01") & (df["date"] <= "2026-08-01")].copy()
+
+# real wage in August 2026 dollars
+latest_cpi = df["cpi"].iloc[-1]
+df["real_wage"] = df["wage"] * latest_cpi / df["cpi"]
+
+df.to_csv("data/processed/wages_cpi_clean.csv", index=False)
+
+# any missing months?
+df[df["cpi"].isna()]
+```
+
+One thing I noticed: October 2025 has no CPI. The government shutdown stopped BLS from collecting prices that month, so I left it blank instead of making up a number. That's why the lines have a small gap.
+
+## What I found
+
+```{python}
+feb20 = df[df["date"] == "2020-02-01"].iloc[0]
+aug26 = df[df["date"] == "2026-08-01"].iloc[0]
+
+pay_change = (aug26["wage"] / feb20["wage"] - 1) * 100
+price_change = (aug26["cpi"] / feb20["cpi"] - 1) * 100
+real_change = (aug26["real_wage"] / feb20["real_wage"] - 1) * 100
+
+summary = pd.DataFrame({
+    "measure": ["pay change (%)", "price change (%)", "real pay change (%)"],
+    "value": [pay_change, price_change, real_change]
+}).round(1)
+summary.to_csv("results/tables/summary.csv", index=False)
+summary
+```
+
+Since February 2020, average pay went up 32.3%. That sounds great until you see that prices went up 28.9% too. So the real raise is only about 2.7% over six and a half years.
+
+```{python}
+#| fig-cap: "Source: BLS via FRED (CES0500000003, CPIAUCSL)."
+plt.figure(figsize=(8, 5))
+plt.plot(df["date"], df["wage"], color="gray", label="Actual pay")
+plt.plot(df["date"], df["real_wage"], color="tab:blue", label="Pay in August 2026 dollars")
+plt.title("Average hourly pay, actual vs. adjusted for inflation")
+plt.ylabel("Dollars per hour")
+plt.legend()
+plt.savefig("results/figures/fig1_real_wage.png", dpi=300)
+plt.show()
+```
+
+The gray line is the actual paycheck: \$28.54 an hour in February 2020 and \$37.76 in August 2026. The blue line shows what that pay can buy, and it's much flatter. In today's dollars, the February 2020 wage was worth \$36.78, so the real gain is less than a dollar an hour.
+
+The jump in spring 2020 isn't a raise. Millions of low-paid workers lost their jobs, so the average pay of the people still working shot up. After that, real pay slid during the inflation surge and bottomed out in June 2022, a bit below where it started.
+
+```{python}
+#| fig-cap: "Source: BLS via FRED (CES0500000003, CPIAUCSL). No CPI for October 2025."
+plt.figure(figsize=(8, 5))
+plt.plot(df["date"], df["wage_growth"], color="tab:blue", label="Wage growth")
+plt.plot(df["date"], df["inflation"], color="tab:orange", label="Inflation")
+plt.fill_between(df["date"], df["wage_growth"], df["inflation"],
+                 where=df["inflation"] > df["wage_growth"],
+                 color="tab:orange", alpha=0.3, label="Prices rising faster than pay")
+plt.axhline(0, color="black", linewidth=0.8)
+plt.title("Wage growth vs. inflation (change from a year earlier)")
+plt.ylabel("Percent")
+plt.legend(loc="upper right")
+plt.savefig("results/figures/fig2_growth_vs_inflation.png", dpi=300)
+plt.show()
+
+# number of months each year when prices won
+df["prices_won"] = df["inflation"] > df["wage_growth"]
+df.groupby(df["date"].dt.year)["prices_won"].sum()
+```
+
+Think of this chart as a race. When the orange line is above the blue one, prices are growing faster than pay, and I shaded those months. Inflation peaked at 9.0% in June 2022 (the famous 9.1% is the number before seasonal adjustment). Wages grew around 5% a year, which wasn't enough, and prices won every month from April 2021 to April 2023. After that, wages pulled ahead again, but since April 2026 prices have been slightly ahead once more.
+
+```{python}
+#| fig-cap: "Source: BLS via FRED (average hourly earnings by industry, CPIAUCSL)."
+industries = {
+    "Mining and logging": "CES1000000003",
+    "Construction": "CES2000000003",
+    "Manufacturing": "CES3000000003",
+    "Wholesale trade": "CES4142000003",
+    "Retail trade": "CES4200000003",
+    "Transportation": "CES4300000003",
+    "Utilities": "CES4422000003",
+    "Information": "CES5000000003",
+    "Financial activities": "CES5500000003",
+    "Professional services": "CES6000000003",
+    "Education and health": "CES6500000003",
+    "Leisure and hospitality": "CES7000000003",
+    "Other services": "CES8000000003",
+}
+
+price_ratio = aug26["cpi"] / feb20["cpi"]
+
+rows = []
+for name, series_id in industries.items():
+    ind = get_fred(series_id)
+    start = ind[ind["date"] == "2020-02-01"]["value"].iloc[0]
+    end = ind[ind["date"] == "2026-08-01"]["value"].iloc[0]
+    change = ((end / start) / price_ratio - 1) * 100
+    rows.append([name, start, end, round(change, 1)])
+
+by_industry = pd.DataFrame(rows, columns=["industry", "wage_feb2020", "wage_aug2026", "real_change"])
+by_industry = by_industry.sort_values("real_change")
+by_industry.to_csv("results/tables/real_change_by_industry.csv", index=False)
+
+plt.figure(figsize=(8, 6))
+bars = plt.barh(by_industry["industry"], by_industry["real_change"], color="tab:blue")
+plt.bar_label(bars, fmt="%.1f", padding=3)
+plt.axvline(0, color="black", linewidth=0.8)
+plt.margins(x=0.15)
+plt.title("Change in real hourly pay by industry, Feb 2020 to Aug 2026")
+plt.xlabel("Percent")
+plt.tight_layout()
+plt.savefig("results/figures/fig3_industries.png", dpi=300)
+plt.show()
+```
+
+Almost every industry came out a little ahead, but leisure and hospitality (restaurants, hotels, bars) stands out at +9.0%. It was also the lowest-paid industry before COVID, at \$16.92 an hour, and it probably raised pay the most because these businesses had a hard time hiring when things reopened in 2021. Mining and logging (-5.6%) and wholesale trade (-2.7%) were the only ones that fell behind.
+
+## Limits
+
+These are averages, so they don't describe every worker, and they only cover hourly pay, not benefits, hours, or taxes. The CPI is also an average basket, so your own inflation could be higher or lower. And this is descriptive: it shows what happened, not exactly why.
+
+## Takeaway
+
+So, did paychecks keep up? **Yes, but barely.** Pay rose 32.3% and prices rose 28.9%, which leaves a real raise of about 2.7%, less than a dollar an hour. Workers fell behind for two years during the inflation surge, slowly caught up, and lower-paid industries like restaurants and hotels did best. If your raise felt like it disappeared at the grocery store, you weren't imagining it.
+
+The code, data, and charts are all in my GitHub repo, and the README explains how to rerun everything.
