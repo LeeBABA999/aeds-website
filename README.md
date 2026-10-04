@@ -1,3 +1,38 @@
+Blog Post 4: Did Paychecks Keep Up With Prices?
+------------------------------------
+
+For this post, I used Python and FRED data to check whether U.S. wages kept up with inflation after COVID. The three charts compare actual and inflation-adjusted pay, wage growth and inflation, and real pay changes across 13 industries from February 2020 to August 2026.
+
+Where to find everything
+------------------------------------
+
+Inside `blog/posts/post4/`:
+
+- `index.qmd` has all the code and writing.
+- `data/raw/` has the FRED downloads, saved the first time the code runs.
+- `data/processed/` has the cleaned monthly data.
+- `results/figures/` has the three charts and `results/tables/` has two summary tables, all made by the code.
+- `requirements.txt` lists the Python packages.
+
+How to run the analysis
+------------------------------------
+
+You will need R, Quarto, and Python. Install the R packages once in the R Console:
+
+```r
+install.packages(c("knitr", "rmarkdown", "reticulate"))
+```
+
+Then set up the class Python environment once in the Terminal:
+
+```bash
+python3 -m venv ~/aeds6400-python
+~/aeds6400-python/bin/python -m pip install -r blog/posts/post4/requirements.txt
+```
+
+Open `blog/posts/post4/index.qmd` and click **Render**. The code only downloads a FRED series if it isn't already in `data/raw/`, so it uses the same data I used. To get newer data, delete the files in `data/raw/` and render again; the numbers may then differ from my post. On a Mac, if the download fails with `CERTIFICATE_VERIFY_FAILED`, run `Install Certificates.command` from your Python folder in Applications.
+
+
 Blog Post 3: Education and Unemployment Through the Pandemic and Recovery
 ------------------------------------
 
