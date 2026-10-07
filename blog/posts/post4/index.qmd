@@ -1,5 +1,6 @@
 ---
 title: "Did Paychecks Keep Up With Prices?"
+subtitle: "Paychecks are up 32% since COVID began, but prices rose 29%. The real raise: less than a dollar an hour."
 author: "Michael Li"
 date: "2026-10-04"
 categories: [Data Viz, inflation, Python]
@@ -24,6 +25,8 @@ Sys.setenv(RETICULATE_PYTHON = path.expand("~/aeds6400-python/bin/python"))
 In 2022 it felt like everyone I knew was complaining about prices: rent, groceries, gas. But a lot of people also got big raises around then. So which one won?
 
 **My question: since COVID started, have paychecks kept up with prices, and did some industries do better than others?**
+
+**The short answer: barely.** The average paycheck has grown 32% since February 2020, but prices grew 29%, so an hour of work buys only about 3% more than it did before COVID.
 
 This matters because your paycheck number isn't what you live on. If your pay rises 10% but prices rise 15%, you can buy less than before. Economists call the paycheck number the *nominal* wage and what it buys the *real* wage, the one people actually feel.
 
@@ -107,6 +110,9 @@ summary = pd.DataFrame({
     "value": [pay_change, price_change, real_change]
 }).round(1)
 summary.to_csv("results/tables/summary.csv", index=False)
+#real gain for a full time worker
+yearly_gain = (aug26["real_wage"] - feb20["real_wage"]) * 2080
+print("Real gain per year, full-time worker: $", round(yearly_gain))
 summary
 ```
 
@@ -118,14 +124,23 @@ Since February 2020, average pay went up 32.3%. That sounds great until you see 
 plt.figure(figsize=(8, 5))
 plt.plot(df["date"], df["wage"], color="gray", label="Actual pay")
 plt.plot(df["date"], df["real_wage"], color="tab:blue", label="Pay in August 2026 dollars")
-plt.title("Average hourly pay, actual vs. adjusted for inflation")
+#label the two key moments
+spike = df[df["date"] == "2020-04-01"].iloc[0]
+low = df[df["date"] == "2022-06-01"].iloc[0]
+plt.annotate("COVID layoffs pushed the average up,\nnot real raises",
+             xy=(spike["date"], spike["real_wage"]), xytext=(pd.Timestamp("2020-08-01"), 38.55),
+             arrowprops=dict(arrowstyle="->"), fontsize=9)
+plt.annotate("Low point: June 2022",
+             xy=(low["date"], low["real_wage"]), xytext=(pd.Timestamp("2021-04-01"), 35.4),
+             arrowprops=dict(arrowstyle="->"), fontsize=9)
+plt.title("Paychecks grew 32%, but what they buy grew only 3%")  
 plt.ylabel("Average hourly earnings ($ per hour)")
 plt.legend()
 plt.savefig("results/figures/fig1_real_wage.png", dpi=300)
 plt.show()
 ```
 
-In @fig-pay, the gray line is the actual paycheck: \$28.54 an hour in February 2020 and \$37.76 in August 2026. The blue line shows what that pay can buy, and it's much flatter: in today's dollars, the February 2020 wage was worth \$36.78, so the real gain is under a dollar an hour.
+In @fig-pay, the gray line is the actual paycheck: \$28.54 an hour in February 2020 and \$37.76 in August 2026. The blue line shows what that pay can buy, and it's much flatter: in today's dollars, the February 2020 wage was worth \$36.78, so the real gain is under a dollar an hour. For someone working full time, that's only about \$2,000 a year in extra buying power after six and a half years.
 
 The jump in spring 2020 isn't a raise. Millions of low-paid workers lost their jobs, so the average pay of those still working shot up. Real pay then slid during the inflation surge and bottomed out in June 2022, a bit below where it started.
 
@@ -139,9 +154,14 @@ plt.fill_between(df["date"], df["wage_growth"], df["inflation"],
                  where=df["inflation"] > df["wage_growth"],
                  color="tab:orange", alpha=0.3, label="Prices rising faster than pay")
 plt.axhline(0, color="black", linewidth=0.8)
-plt.title("Wage growth vs. inflation")
+#label the peak
+peak = df[df["date"] == "2022-06-01"].iloc[0]
+plt.annotate("Inflation peaked at 9.0%,\nthe highest since 1981",
+             xy=(peak["date"], peak["inflation"]), xytext=(pd.Timestamp("2023-03-01"), 8.2),
+             arrowprops=dict(arrowstyle="->"), fontsize=9)
+plt.title("For two years, prices outran paychecks")
 plt.ylabel("Change from a year earlier (%)")
-plt.legend(loc="upper right")
+plt.legend(loc="lower right")
 plt.savefig("results/figures/fig2_growth_vs_inflation.png", dpi=300)
 plt.show()
 
@@ -150,7 +170,7 @@ df["prices_won"] = df["inflation"] > df["wage_growth"]
 df.groupby(df["date"].dt.year)["prices_won"].sum()
 ```
 
-Think of @fig-race as a race: in the shaded months, prices grew faster than pay. Inflation peaked at 9.0% in June 2022 (the famous 9.1% is before seasonal adjustment). Wages grew around 5% a year, which wasn't enough, so prices won every month from April 2021 to April 2023. Wages pulled ahead after that, but since April 2026 prices have been slightly ahead again.
+Think of @fig-race as a race: in the shaded months, prices grew faster than pay. Inflation peaked at 9.0% in June 2022 (the famous 9.1% is before seasonal adjustment). That was the fastest inflation since 1981. Wages grew around 5% a year, which wasn't enough, so prices won every month from April 2021 to April 2023. Wages pulled ahead after that, but since April 2026 prices have been slightly ahead again. 
 
 To see who did best, I repeated the February 2020 vs. August 2026 comparison for each industry, taking out the 28.9% rise in prices.
 
@@ -192,14 +212,14 @@ bars = plt.barh(by_industry["industry"], by_industry["real_change"], color="tab:
 plt.bar_label(bars, fmt="%.1f", padding=3)
 plt.axvline(0, color="black", linewidth=0.8)
 plt.margins(x=0.15)
-plt.title("Real pay change by industry, Feb 2020 to Aug 2026")
+plt.title("Restaurant and hotel workers got the biggest real raises")
 plt.xlabel("Change in real hourly pay (%)")
 plt.tight_layout()
 plt.savefig("results/figures/fig3_industries.png", dpi=300)
 plt.show()
 ```
 
-@fig-industry shows that almost every industry came out a little ahead, but leisure and hospitality (restaurants, hotels, bars) stands out at +9.0%. It was also the lowest-paid industry before COVID (\$16.92 an hour), and it probably raised pay the most because restaurants and hotels struggled to hire when things reopened in 2021. Only mining and logging (-5.6%) and wholesale trade (-2.7%) fell behind.
+@fig-industry shows that almost every industry came out a little ahead, but leisure and hospitality (restaurants, hotels, bars) stands out at +9.0%. It was also the lowest-paid industry before COVID (\$16.92 an hour), and it probably raised pay the most because restaurants and hotels struggled to hire when things reopened in 2021. Only mining and logging (-5.6%) and wholesale trade (-2.7%) fell behind. For a full-time worker in leisure and hospitality, the real raise comes to roughly \$4,000 a year.
 
 ## Limits
 
@@ -213,4 +233,4 @@ The biggest lesson for me is that a raise only means something next to the infla
 
 ------
 
-*Data source: U.S. Bureau of Labor Statistics, via FRED (Federal Reserve Bank of St. Louis): average hourly earnings for all private-sector employees ([`CES0500000003`](https://fred.stlouisfed.org/series/CES0500000003)) and 13 industries (`CES1000000003` to `CES8000000003`), and the CPI-U ([`CPIAUCSL`](https://fred.stlouisfed.org/series/CPIAUCSL)), all monthly and seasonally adjusted. BLS data are public domain. Read programmatically from FRED's CSV links on October 4, 2026 and cached in `data/raw/`. Code to reproduce the analysis is in the [GitHub repository](https://github.com/LeeBABA999/aeds-website/tree/main/blog/posts/post4).*
+*Data source: U.S. Bureau of Labor Statistics, via FRED (Federal Reserve Bank of St. Louis): average hourly earnings for all private-sector employees ([`CES0500000003`](https://fred.stlouisfed.org/series/CES0500000003)) and 13 industries (`CES1000000003` to `CES8000000003`), and the CPI-U ([`CPIAUCSL`](https://fred.stlouisfed.org/series/CPIAUCSL)), all monthly and seasonally adjusted. BLS data are public domain. Read programmatically from FRED's CSV links on October 4, 2026 and cached in `data/raw/`. The wage numbers come from the BLS's monthly survey of employers (Current Employment Statistics), and the CPI-U covers urban consumers, over 90% of the U.S. population. Code to reproduce the analysis is in the [GitHub repository](https://github.com/LeeBABA999/aeds-website/tree/main/blog/posts/post4).*
