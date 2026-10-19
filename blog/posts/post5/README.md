@@ -56,7 +56,7 @@ If using another environment, update the `RETICULATE_PYTHON` path in the first c
 ## Reproduce the post
 
 1. Clone or download the repository, keeping this post's `index.qmd`, `data/`, and `results/` together in `blog/posts/post5/`.
-2. Open `studentname-website.Rproj` in the repository root, then open `blog/posts/post5/index.qmd`.
+2. Open `website2.Rproj` in the repository root, then open `blog/posts/post5/index.qmd`.
 3. Restart R after setting up the Python environment, then click **Render**. Run the complete document so the data and figures are regenerated in order.
 
 Alternatively, run this command from the website repository root:
