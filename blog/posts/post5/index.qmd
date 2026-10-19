@@ -1,0 +1,262 @@
+---
+title: "Same Region, Different Incomes"
+subtitle: "Chester’s median household income is about twice Philadelphia’s."
+author: "Michael Li"
+date: "2026-10-19"
+categories: [GIS, Income, Python]
+format:
+  html:
+    code-fold: true
+    embed-resources: true
+engine: knitr
+execute:
+  echo: true
+  error: false
+---
+
+```{r}
+#| include: false
+Sys.setenv(RETICULATE_PYTHON = path.expand("~/aeds6400-python/bin/python"))
+```
+
+## Why I looked at this
+
+In my last post, the important question was what a paycheck could buy. This time, I’m looking at where income is concentrated. We often describe whole regions as wealthy, but does that description fit every place within them?
+
+**My question: where are Pennsylvania’s higher-income counties concentrated, and how does Philadelphia compare with nearby counties?**
+
+**The short answer: the southeast stands out, but Philadelphia tells a different story.** Chester County’s median household income is roughly twice Philadelphia’s. That’s a substantial gap between places in the same part of the state.
+
+That’s why I wanted to put the numbers on a map. A statewide summary gives an overall income level, but it cannot show whether neighboring counties look alike. Seeing the counties together lets me ask whether higher incomes are spread across Pennsylvania or concentrated in particular places.
+
+## What the data measure
+
+I use the U.S. Census Bureau’s [2020–2024 American Community Survey](https://api.census.gov/data/2024/acs/acs5/groups/B19013.html) and [2024 county boundaries](https://www.census.gov/geographies/mapping-files/2024/geo/carto-boundary-file.html), covering all 67 Pennsylvania counties. Here, Philadelphia means Philadelphia County, which covers the city.
+
+The ACS combines survey responses collected over five years to produce estimates for places of different sizes. The income figures describe annual household income, not five years of earnings added together. They also do not measure how much income grew between 2020 and 2024.
+
+My variable, `B19013_001E`, is median household income in inflation-adjusted 2024 dollars. Imagine lining up households from lowest to highest income: the median sits in the middle.
+
+For example, suppose five households earn \$30,000, \$40,000, \$50,000, \$80,000, and \$200,000. The median is \$50,000. That gives us a way to describe the middle of the group without letting the highest income dominate the number.
+
+Using a median also lets us compare differently sized counties: having more households does not automatically give a county a higher median.
+
+Household income is also different from the paycheck measure in my last post. A household can have several earners, and income can include sources beyond wages. So this comparison describes household income levels; it does not tell us what someone would earn for doing the same job in each county.
+
+## From a table to a map
+
+To draw the map, I need both a number and a shape for each county. I match the income table to the county boundaries using `GEOID`, the Census identifier. Think of it as an ID number that helps put each income estimate in the correct place.
+
+The code checks that all 67 counties matched and have usable income estimates. I use an equal-area projection, EPSG:5070, to preserve relative geographic areas on the flat map. Downloads are saved in `data/raw`, so later renders reuse the same inputs. Cleaned data, figures, and tables are also saved automatically.
+
+```{python}
+#| results: hide
+from pathlib import Path
+import os
+import requests
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+raw = Path("data/raw")
+processed = Path("data/processed")
+figures = Path("results/figures")
+tables = Path("results/tables")
+
+for folder in [raw, processed, figures, tables]:
+    folder.mkdir(parents=True, exist_ok=True)
+
+zip_file = raw / "cb_2024_us_county_500k.zip"
+csv_file = raw / "acs_2024_pa_county_income.csv"
+
+if not zip_file.exists():
+    url = "https://www2.census.gov/geo/tiger/GENZ2024/shp/cb_2024_us_county_500k.zip"
+    response = requests.get(url, timeout=120)
+    response.raise_for_status()
+    zip_file.write_bytes(response.content)
+
+if not csv_file.exists():
+    key = os.getenv("CENSUS_API_KEY")
+    assert key, "Set CENSUS_API_KEY in .Renviron and restart R."
+
+    params = {
+        "get": "NAME,B19013_001E",
+        "for": "county:*",
+        "in": "state:42",
+        "key": key
+    }
+
+    try:
+        response = requests.get(
+            "https://api.census.gov/data/2024/acs/acs5",
+            params=params,
+            timeout=60
+        )
+    except requests.RequestException:
+        raise RuntimeError("Census download failed; check your connection.") from None
+
+    assert response.status_code == 200, "Check your activated Census key."
+    data = response.json()
+    pd.DataFrame(data[1:], columns=data[0]).to_csv(csv_file, index=False)
+
+counties = gpd.read_file(zip_file)
+counties = counties.loc[
+    counties.STATEFP == "42", ["GEOID", "NAME", "geometry"]
+]
+
+acs = pd.read_csv(csv_file, dtype=str)
+acs["GEOID"] = acs.state.str.zfill(2) + acs.county.str.zfill(3)
+acs["income"] = pd.to_numeric(acs.B19013_001E, errors="coerce")
+
+pa = counties.merge(
+    acs[["GEOID", "income"]],
+    on="GEOID",
+    how="left",
+    validate="one_to_one"
+)
+
+assert len(pa) == 67 and pa.GEOID.is_unique
+assert pa.income.notna().all() and pa.income.gt(0).all()
+
+pa = pa.to_crs("EPSG:5070")
+pa[["GEOID", "NAME", "income"]].to_csv(
+    processed / "county_income.csv", index=False
+)
+```
+
+## What the map shows
+
+```{python}
+#| label: fig-map
+#| results: hide
+#| fig-cap: "County median household income, 2020–2024 ACS; 2024 dollars. Source: U.S. Census Bureau."
+fig, ax = plt.subplots(figsize=(10, 6))
+
+pa.plot(
+    column="income",
+    cmap="Blues",
+    edgecolor="white",
+    linewidth=0.5,
+    legend=True,
+    ax=ax,
+    legend_kwds={
+        "label": "Median household income (2024 dollars)",
+        "orientation": "horizontal",
+        "format": "${x:,.0f}"
+    }
+)
+
+for name, offset in [
+    ("Chester", (-35, -30)),
+    ("Philadelphia", (20, -5)),
+    ("Montgomery", (35, 30)),
+    ("Bucks", (30, 55)),
+    ("Cameron", (5, 15))
+]:
+    point = pa.loc[pa.NAME == name].geometry.iloc[0].representative_point()
+    ax.annotate(
+        name, (point.x, point.y),
+        xytext=offset,
+        textcoords="offset points",
+        fontsize=9,
+        arrowprops={"arrowstyle": "-"},
+        bbox={"facecolor": "white", "edgecolor": "none", "pad": 2}
+    )
+
+ax.set_title("Higher incomes cluster in southeastern Pennsylvania")
+ax.set_axis_off()
+fig.tight_layout()
+fig.savefig(figures / "income_map.png", dpi=300, bbox_inches="tight")
+plt.show()
+```
+
+Start with the geography in @fig-map. Each shape is one county, and darker blue means higher median household income. Chester, Bucks, and Montgomery have the three highest estimates. They sit close together in southeastern Pennsylvania, which is why that corner stands out.
+
+Philadelphia complicates the picture. It belongs to the same region, but its much lighter shade reflects a lower median. The difference isn’t just between opposite ends of Pennsylvania. It also appears among counties within the southeast.
+
+Lower-income counties also appear in the north, including Cameron, and parts of the southwest. So I wouldn’t read this as a simple “wealthy east, poorer west” map. There are differences within those broad areas too.
+
+One detail matters when reading it: a large county takes up more space, but that doesn’t mean it contains more people. A wide stretch of pale-blue counties can dominate the picture even when many residents live in smaller counties. The map shows where income levels are located, not the share of Pennsylvanians living at each level.
+
+## Putting numbers beside the map
+
+The colors help locate the pattern, but the bars in @fig-counties make its size easier to compare. I focus on Philadelphia and four nearby Pennsylvania counties: Bucks, Chester, Delaware, and Montgomery. That keeps the comparison within the same region.
+
+Bar length represents median annual household income, and the labels give the dollar estimates. Orange simply highlights Philadelphia so it is easy to find among the other counties.
+
+```{python}
+#| label: fig-counties
+#| results: hide
+#| fig-cap: "Philadelphia and four nearby counties. Source: 2020–2024 ACS; 2024 dollars."
+nearby = pa[pa.NAME.isin([
+    "Philadelphia", "Bucks", "Chester", "Delaware", "Montgomery"
+])]
+nearby = nearby.sort_values("income")
+
+nearby[["NAME", "income"]].to_csv(
+    tables / "nearby_counties.csv", index=False
+)
+
+colors = [
+    "tab:orange" if name == "Philadelphia" else "tab:blue"
+    for name in nearby.NAME
+]
+
+fig, ax = plt.subplots(figsize=(8, 4))
+bars = ax.barh(nearby.NAME, nearby.income, color=colors)
+
+ax.bar_label(
+    bars,
+    labels=[f"${x:,.0f}" for x in nearby.income],
+    padding=4
+)
+
+ax.set_xlim(0, 150000)
+ax.set_xticks(
+    [0, 50000, 100000, 150000],
+    ["$0", "$50,000", "$100,000", "$150,000"]
+)
+ax.set_xlabel("Median household income (2024 dollars)")
+ax.set_title("Philadelphia’s median is roughly half Chester’s")
+
+fig.tight_layout()
+fig.savefig(figures / "nearby_counties.png", dpi=300, bbox_inches="tight")
+plt.show()
+```
+
+```{python}
+#| echo: false
+#| results: asis
+income = pa.set_index("NAME").income
+
+print(
+    f"Chester’s median is **\\${income['Chester']:,.0f}**, compared with "
+    f"**\\${income['Philadelphia']:,.0f}** in Philadelphia—a difference of "
+    f"**\\${income['Chester'] - income['Philadelphia']:,.0f}**. "
+    "That puts Chester slightly above twice Philadelphia’s level."
+)
+```
+
+This isn’t just a comparison with one unusually high county. Bucks and Montgomery are both above \$113,000, while Delaware is close to \$90,000. Philadelphia, at about \$62,000, falls below all four.
+
+Even Delaware, the lowest of the four comparison counties, is about \$27,600 above Philadelphia. So the local gap remains substantial when I look beyond Chester at the top of the chart.
+
+Those are differences between county medians. They don’t mean that every Chester household earns twice as much as every Philadelphia household. What they do show is that the middle of the income distribution looks very different across these nearby places. Calling the whole region wealthy misses that distinction.
+
+## What these figures cannot tell us
+
+County medians hide differences among neighborhoods and households. Two counties could have similar medians even if income were distributed very differently within them. These figures alone cannot tell us how many households are struggling or how incomes vary between neighborhoods.
+
+The ACS is also a survey, so these numbers have uncertainty. Bucks and Montgomery illustrate why that matters: their estimates are only \$849 apart. Without examining the margins of error, I would not put much weight on which ranks second or third. I have not tested whether the differences shown are statistically significant.
+
+And “2024 dollars” puts incomes on the same time basis; it doesn’t adjust for local living costs. The \$65,255 gap is also not an estimate of what a family would gain by moving to Chester County. Jobs, housing, and household composition could matter, but these figures do not establish causes.
+
+## Takeaway
+
+So, where are higher incomes concentrated? **Pennsylvania’s highest county estimates are in the southeast, but Philadelphia has a much lower median than the four nearby counties in this comparison.**
+
+A region’s reputation can only tell us so much. The statewide map points to a concentration of higher incomes. Looking more closely shows a substantial divide inside that same region. Before describing an area as wealthy, it helps to ask which places that description actually fits.
+
+------
+
+*Data sources: U.S. Census Bureau: [2020–2024 American Community Survey five-year estimates](https://api.census.gov/data/2024/acs/acs5/groups/B19013.html), median household income (`B19013_001E`), and [2024 cartographic county boundary files](https://www.census.gov/geographies/mapping-files/2024/geo/carto-boundary-file.html) at 1:500,000 scale. The analysis covers all 67 Pennsylvania counties. Income figures describe annual household income in inflation-adjusted 2024 dollars and are survey estimates. Data are downloaded programmatically from the Census API and boundary-file archive, then cached in `data/raw/`. Cleaned data are saved in `data/processed/`, with figures and comparison tables in `results/`. The complete analysis code is included in this post’s Quarto file, with replication instructions in `README.md`. Project repository: [GitHub](https://github.com/LeeBABA999/aeds-website).*
