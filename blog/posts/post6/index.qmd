@@ -1,0 +1,293 @@
+---
+title: "Does One Year's Income Tell the Whole Story?"
+subtitle: "Matching fathers and adult children with SQL in Python"
+author: "Michael Li"
+date: "2026-10-23"
+categories: [SQL, Income Mobility, Python]
+engine: knitr
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Show Python code"
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+  cache: false
+---
+
+```{r}
+#| include: false
+Sys.setenv(RETICULATE_PYTHON = path.expand("~/aeds6400-python/bin/python"))
+knitr::opts_knit$set(root.dir = normalizePath(dirname(knitr::current_input(dir = TRUE))))
+```
+
+## Why I looked at this
+
+In my last post, nearby counties had very different incomes. This time, I wanted to follow families: **how closely does adult income resemble parental income, and does the answer depend on when we measure it?**
+
+Think about someone finishing graduate school at 30. Their income today may say little about where they will be at 40. That makes the timing of an income comparison worth questioning.
+
+## What the data measure
+
+I use the [Panel Study of Income Dynamics](https://psidonline.isr.umich.edu/) (PSID), which follows families over time. I match biological fathers to children who lived with them in 1985. Children must be ages 27–32 in 2001; fathers, 30–60 in 1985. Each needs three usable observations as a household head in every relevant window.
+
+| Family income | Single year | Years averaged |
+|---|---|---|
+| Father | 1984 | 1983, 1984, 1985 |
+| Child around 30 | 2000 | 1998, 2000, 2002 |
+| Child around 40 | 2010 | 2008, 2010, 2012 |
+
+These are income years; interviews report the previous year's income. I convert amounts to 2019 dollars and exclude missing values and amounts of \$1 or less; older PSID codes use \$1 for some zero or negative incomes. Family income includes other members' resources. The [README](https://github.com/LeeBABA999/aeds-website/tree/main/blog/posts/post6#readme) provides replication steps.
+
+```{python}
+#| label: prepare-data
+#| output: false
+from pathlib import Path
+import sqlite3
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+
+for folder in ["data/raw", "data/processed", "sql", "results/tables", "results/figures"]:
+    Path(folder).mkdir(parents=True, exist_ok=True)
+
+data = pd.read_excel("data/raw/psid.xlsx", sheet_name="Data", engine="calamine")
+data["person_id"] = data.ER30001 * 1000 + data.ER30002
+data["father_id"] = (data.ER32016 * 1000 + data.ER32017).where(
+    (data.ER32016 > 0) & (data.ER32017 > 0))
+people = data[["person_id", "father_id", "ER30463", "ER30464"]].rename(
+    columns={"ER30463": "home_1985", "ER30464": "sequence_1985"})
+
+# Survey year: family ID, sequence number, head's age, family income.
+variables = {
+    1984: ["ER30429", "ER30430", "V10419", "V11022"],
+    1985: ["ER30463", "ER30464", "V11606", "V12371"],
+    1986: ["ER30498", "ER30499", "V13011", "V13623"],
+    1999: ["ER33501", "ER33502", "ER13010", "ER16462"],
+    2001: ["ER33601", "ER33602", "ER17013", "ER20456"],
+    2003: ["ER33701", "ER33702", "ER21017", "ER24099"],
+    2009: ["ER34001", "ER34002", "ER42017", "ER46935"],
+    2011: ["ER34101", "ER34102", "ER47317", "ER52343"],
+    2013: ["ER34201", "ER34202", "ER53017", "ER58152"]
+}
+# Each survey reports income for the previous calendar year.
+cpi = {1984: 99.6, 1985: 103.9, 1986: 107.6, 1999: 163.0,
+       2001: 172.2, 2003: 179.9, 2009: 215.303, 2011: 218.056, 2013: 229.594}
+
+parts = []
+for year, columns in variables.items():
+    row = data[["person_id"] + columns].copy()
+    row.columns = ["person_id", "family_id", "sequence", "age", "income"]
+    row = row.loc[(row.sequence == 1) & (row.family_id > 0) & (row.income > 1)].copy()
+    row["income"] = row.income * 255.657 / cpi[year]
+    row["year"] = year
+    parts.append(row)
+
+incomes = pd.concat(parts, ignore_index=True)
+assert people.person_id.is_unique
+assert not incomes.duplicated(["person_id", "year"]).any()
+people.to_csv("data/processed/people.csv", index=False)
+incomes.to_csv("data/processed/incomes.csv", index=False)
+conn = sqlite3.connect(":memory:")
+people.to_sql("people", conn, index=False, if_exists="replace")
+incomes.to_sql("incomes", conn, index=False, if_exists="replace")
+```
+
+## Building the match with SQL
+
+Python creates `people`, containing family links, and `incomes`, containing annual records. `SELECT` chooses columns; `GROUP BY` gathers each person's years. **Aggregation** turns these rows into a summary: `AVG` calculates mean income and `COUNT` checks completeness. `HAVING` requires three observations. `CASE WHEN` and `MAX` retrieve the middle year's value; Python supplies the years through `?` placeholders.
+
+```{python}
+#| code-fold: false
+#| output: false
+summary_sql = """
+SELECT person_id,
+       AVG(income) AS mean_income,
+       MAX(CASE WHEN year = ? THEN income END) AS one_income,
+       MAX(CASE WHEN year = ? THEN age END) AS age,
+       MAX(CASE WHEN year = ? THEN family_id END) AS home
+FROM incomes
+WHERE year IN (?, ?, ?)
+GROUP BY person_id
+HAVING COUNT(income) = 3
+"""
+windows = [("parents", [1984, 1985, 1986], 1985),
+           ("early", [1999, 2001, 2003], 2001),
+           ("later", [2009, 2011, 2013], 2011)]
+for table, years, center in windows:
+    summary = pd.read_sql_query(summary_sql, conn,
+                                params=[center, center, center] + years)
+    summary.to_sql(table, conn, index=False, if_exists="replace")
+Path("sql/income_summary.sql").write_text(summary_sql)
+```
+
+`JOIN` connects these summaries using person identifiers. Each ID combines an original family number and person number, distinguishing siblings. The recorded father ID establishes parenthood; 1985 family IDs and membership numbers confirm shared residence. Summarizing first avoids counting each child repeatedly.
+
+```{python}
+#| code-fold: false
+#| output: false
+match_sql = """
+SELECT c.person_id AS child_id, c.father_id,
+       p.one_income AS parent_one, p.mean_income AS parent_mean,
+       e.one_income AS early_one, e.mean_income AS early_mean,
+       l.one_income AS later_one, l.mean_income AS later_mean
+FROM people AS c
+JOIN parents AS p ON c.father_id = p.person_id
+JOIN early AS e ON c.person_id = e.person_id
+JOIN later AS l ON c.person_id = l.person_id
+WHERE e.age BETWEEN 27 AND 32
+  AND p.age BETWEEN 30 AND 60
+  AND c.home_1985 = p.home
+  AND c.sequence_1985 BETWEEN 1 AND 20
+ORDER BY child_id
+"""
+matched = pd.read_sql_query(match_sql, conn)
+conn.close()
+assert matched.child_id.is_unique
+assert (matched.iloc[:, 2:] > 0).all().all()
+matched.to_csv("data/processed/matched.csv", index=False)
+Path("sql/match.sql").write_text(match_sql)
+print(f"{len(matched)} children matched to {matched.father_id.nunique()} fathers")
+```
+
+## What the income relationship looks like
+
+The match produces **170 children and 152 fathers**, used in all four regressions:
+
+$$
+\log(Y_{\text{child}})=\alpha+\beta\log(Y_{\text{father}})+\varepsilon.
+$$
+
+The slope, $\beta$, is the intergenerational income elasticity (**IGE**). I average real income before taking logs. Standard errors account for siblings sharing a father. The table reports estimates and 95% confidence limits.
+
+```{python}
+#| output: false
+specifications = [
+    ("Around 30: single year", "early_one", "parent_one"),
+    ("Around 30: three years", "early_mean", "parent_mean"),
+    ("Around 40: single year", "later_one", "parent_one"),
+    ("Around 40: three years", "later_mean", "parent_mean")
+]
+rows, models = [], []
+for label, child, parent in specifications:
+    x = sm.add_constant(np.log(matched[parent]))
+    model = sm.OLS(np.log(matched[child]), x).fit(
+        cov_type="cluster", cov_kwds={"groups": matched.father_id})
+    low, high = model.conf_int().iloc[1]
+    rows.append([label, model.params.iloc[1], low, high, len(matched), model.rsquared])
+    models.append(model)
+results = pd.DataFrame(rows, columns=["Measure", "IGE", "Lower", "Upper", "N", "R-squared"])
+results.to_csv("results/tables/ige_estimates.csv", index=False)
+print(results.round(4).to_string(index=False))
+```
+
+```{python}
+#| echo: false
+#| results: asis
+print(results.round(3).to_html(index=False, border=0))
+```
+
+```{python}
+#| label: fig-incomes
+#| results: hide
+#| fig-cap: "Three-year mean family incomes: fathers in 1983–1985 and adult children in 2008, 2010, and 2012. Each dot represents one of 170 matched children. The line is the fitted log–log relationship. Source: PSID; author’s calculations."
+#| fig-alt: "An upward fitted relationship with substantial variation in adult children’s family incomes at similar parental incomes."
+plt.rcParams.update({"font.size": 11, "axes.spines.top": False,
+                     "axes.spines.right": False})
+x, y = matched.parent_mean, matched.later_mean
+order = np.argsort(x)
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.scatter(x, y, color="#32748A", alpha=0.6, s=30)
+ax.plot(x.iloc[order], np.exp(models[-1].predict())[order],
+        color="#B85C38", linewidth=2)
+ax.set(xscale="log", yscale="log",
+       xlabel="Father's family income (2019 dollars; log scale)",
+       ylabel="Adult child's family income (2019 dollars; log scale)",
+       title="Family incomes move together, but not perfectly")
+ax.set_xticks([20000, 50000, 100000, 200000, 500000],
+              labels=["$20k", "$50k", "$100k", "$200k", "$500k"])
+ax.set_yticks([5000, 20000, 100000, 500000],
+              labels=["$5k", "$20k", "$100k", "$500k"])
+ax.minorticks_off()
+ax.grid(alpha=0.15)
+fig.tight_layout()
+fig.savefig("results/figures/income_relationship.png", dpi=300)
+plt.show()
+```
+
+Each dot in @fig-incomes places a father's average family income horizontally and his adult child's average around 40 vertically. Log scales make equal distances represent equal proportional changes.
+
+The IGE is **0.66**: 1% higher parental income is associated with approximately 0.66% higher adult-child income. For a larger comparison, doubling parental income corresponds to roughly **58% higher child income along the fitted relationship**. The percentage gap narrows across generations, but a substantial association remains. This does not mean children inherit 66% of their parents' income.
+
+Look at the spread around the line, though. Children with similar parental incomes often have very different outcomes. The model's R-squared is **0.18**, meaning parental income alone explains about 18% of the variation in logged child income in this sample. That leaves considerable variation unaccounted for. Education, employment, household composition, and measurement error could contribute, but this regression does not separate their roles or establish causes.
+
+## What changes when we measure income differently?
+
+```{python}
+#| label: fig-comparison
+#| results: hide
+#| fig-cap: "IGE estimates for the same 170 children. Lines show 95% confidence intervals clustered by father. Single-year and three-year windows are listed above. Source: PSID; author’s calculations."
+#| fig-alt: "Four IGE estimates of approximately 0.50, 0.53, 0.57, and 0.66, with wide, overlapping confidence intervals."
+fig, ax = plt.subplots(figsize=(8, 4.8))
+for i, row in results.iterrows():
+    color = "#32748A" if i < 2 else "#B85C38"
+    ax.plot([row.Lower, row.Upper], [i, i], color=color, linewidth=2)
+    ax.scatter(row.IGE, i, color=color, s=65, zorder=3)
+    ax.text(row.IGE, i-0.16, f"{row.IGE:.2f}", ha="center", color=color)
+ax.set_yticks(range(4), labels=results.Measure)
+ax.set(xlim=(0, 1), ylim=(3.6, -0.6), xlabel="Intergenerational elasticity (IGE)",
+       title="The estimate depends on when we measure income")
+ax.grid(axis="x", alpha=0.15)
+fig.tight_layout()
+fig.savefig("results/figures/ige_comparison.png", dpi=300)
+plt.show()
+```
+
+In @fig-comparison, dots show IGE estimates and horizontal lines show 95% confidence intervals. Averaging raises IGE from **0.50 to 0.53 around 30** and **0.57 to 0.66 around 40**. All four intervals lie above zero: the positive association survives every definition tested here.
+
+The averaging effect is larger in the later window. Several observations can smooth a temporary job loss or an unusually good year, providing a better picture of usual resources. But I average **both generations' incomes**, so this comparison cannot tell us which generation's temporary fluctuations drive the change.
+
+Age raises a different problem: **life-cycle bias**. Someone with strong long-term prospects may earn little while still studying, then experience faster income growth. Averaging several early-career years can still miss that later growth. Holding fathers' average income fixed, IGE rises from **0.53 around 30 to 0.66 around 40**. Using the same children rules out changing sample composition as the explanation.
+
+Is that increase precise enough to distinguish from sampling uncertainty? I check directly by relating each child's change in logged average income to the same parental-income measure. Because the children and predictor stay the same, the slope measures the difference between the two IGEs.
+
+```{python}
+#| results: asis
+# Compare the same children's later and earlier income averages.
+growth = np.log(matched.later_mean / matched.early_mean)
+x = sm.add_constant(np.log(matched.parent_mean))
+timing = sm.OLS(growth, x).fit(
+    cov_type="cluster", cov_kwds={"groups": matched.father_id})
+low, high = timing.conf_int().iloc[1]
+timing_check = pd.DataFrame({
+    "Change in IGE": [timing.params.iloc[1]],
+    "Lower": [low], "Upper": [high]
+})
+timing_check.to_csv("results/tables/timing_comparison.csv", index=False)
+print(timing_check.round(3).to_html(index=False, border=0))
+```
+
+The estimated increase is **0.13**, with a 95% confidence interval of **−0.02 to 0.28**. That includes no change. The point estimates suggest timing matters, but the evidence for an increase is less convincing than the evidence for a positive relationship. Age also changes alongside calendar conditions and family composition; this is not a clean estimate of an aging effect.
+
+## Takeaway
+
+My clearest finding is that higher parental family income accompanies higher adult-child family income under every definition I tried. The exact strength is less settled. I would report the later, averaged estimate alongside the alternatives rather than present 0.66 as the definitive answer.
+
+There is another distinction worth keeping in mind: **persistence does not tell us whether children are richer than their parents**. Incomes could rise across generations while proportional differences associated with family background remain substantial. These regressions do not measure the share of children whose living standards improved.
+
+The sample also shapes the answer. Complete records make comparisons consistent, but leave out people without the required household-head observations or resident-father link. I cannot tell whether including them would raise or lower IGE. This unweighted sample is not nationally representative. Before comparing mobility estimates, I would now ask whose resources they measure, at what ages, and over how many years.
+
+---
+
+## Sources
+
+*Data source: [Panel Study of Income Dynamics, public-use data](https://psidonline.isr.umich.edu/). Produced and distributed by the Survey Research Center, Institute for Social Research, University of Michigan, Ann Arbor, MI (2026). Downloaded through the official Data Center on October 23, 2026, extract J366633. Individual file: 1968–2023, Release 2 (December 2025); family waves: 1984–1986, 1999, 2001, 2003, 2009, 2011, and 2013. The original Excel file and codebook are retained locally in `data/raw/`. The accompanying README explains how to reproduce the extract and analysis.*
+
+- [PSID individual codebook](https://psidonline.isr.umich.edu/documents/psid/codebook/IND2023ER_codebook.pdf): permanent identifiers, biological-father links, and family membership.
+- [PSID 1985 family codebook](https://psidonline.isr.umich.edu/documents/psid/codebook/FAM1985_codebook.pdf#page=440): total family income and the historical $1 bottom code.
+- [BLS historical CPI-U](https://www.bls.gov/cpi/tables/supplemental-files/historical-cpi-u-201912.pdf): annual price indexes used to express income in 2019 dollars.
+- [Haider and Solon (2006), *American Economic Review*](https://doi.org/10.1257/aer.96.4.1308): why current income's relationship with lifetime income changes with age.
+- [Python SQLite documentation](https://docs.python.org/3/library/sqlite3.html): running SQL from Python.
