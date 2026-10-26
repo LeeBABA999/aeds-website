@@ -7,11 +7,11 @@ format: html
 
 Eigenvalues and eigenvectors sound intimidating for some people who are not familiar with them. But actually the main idea starts with something simple: an arrow. When a matrix changes an arrow, some arrows stay on the same line. These are eigenvectors, and their eigenvalues describe how they are scaled.
 
-This can be hard to see when a matrix is introduced as a box of numbers the first time we see one. We get busy multiplying entries and lose track of what the calculation does.
+This can be hard to see when we first meet a matrix as a box of numbers. We get busy multiplying entries and lose track of what the calculation does.
 
-But even after I got the picture, one thing still bugged me quite a while. These arrows are actually pretty rare. If you take a typical matrix and apply it to a random arrow, the arrow almost always turns. In the plane, these special arrows fill at most two lines. And yet, eigenvectors seem to show up everythere in datascience. OCA uses them, Markov chains use them, and even Google's original PageRank scores, which Google used to rank webpages, come from an eigenvector. Most explanations I've seen on textbooks focus on how to calculate those eigenvectors, not on why these few special arrows are such a big deal.
+But even after I got the picture, one thing still bugged me for a while. For the matrix I'll use below, these special arrows lie on just two lines, while most arrows turn. And yet, eigenvectors seem to show up everywhere in data science. PCA uses them, Markov chains use them, and even Google's original PageRank scores come from an eigenvector. Most explanations I've seen in textbooks focus on how to calculate those eigenvectors, not on why these few special arrows are such a big deal.
 
-That is the question I want to figure out in my first blog post: if almost every arrow turns, what do the few arrows that don't turn tell us about all the other ones? I'll start with a small example and a picture that may make the idea easier to follow for you. Then we'll do a little experiment in R and keep applying the sma matrix over and over, a bit like how a Markow chain moves forward one step at a time, and see where the turning arrows end up.
+That is the question I want to figure out in my first blog post: if almost every arrow turns, what do the few arrows that don't turn tell us about all the other ones? This matters when repeated multiplication is used to approximate an eigenvector: knowing the eventual direction does not tell us how many steps are enough. I'll start with a small example and a picture that may make the idea easier to follow for you. Then we'll do a little experiment in R and keep applying the same matrix over and over, and see where the turning arrows end up.
 
 ## A small example
 
@@ -31,7 +31,7 @@ A %*% v
 
 The result is $(3,3)$. The arrow becomes three times as long, but still points along the same diagonal. That makes $(1,1)$ an eigenvector of $A$, with an eigenvalue of 3.
 
-Eigenvectors can also have different lengths.For example, an arrow twice as long along this diagonal still gets stretched by three. Its starting size changes, but its eigenvalue stays the same because the scaling is unchanged.
+Eigenvectors can also have different lengths. For example, an arrow twice as long along this diagonal still gets stretched by three. Its starting size changes, but its eigenvalue stays the same because the scaling is unchanged.
 
 ```{r}
 #| fig-cap: "The blue arrow is the original vector. The red arrow extends three times as far along the same line."
@@ -52,6 +52,7 @@ A %*% w
 ```
 
 The result is $(2,1)$, so the arrow tilts upward. It changes direction, which means $(1,0)$ is not an eigenvector of this matrix. The difference is easy to see: one arrow gets longer along its original line, while the other turns.
+
 ```{r}
 #| fig-cap: "The blue arrow (1, 0) is the original vector. The red arrow (2, 1) points in a new direction, so (1, 0) is not an eigenvector."
 
@@ -62,6 +63,7 @@ arrows(0, 0, 1, 0, col = "blue", lwd = 2)
 text(1, 0, "Before", pos = 2)
 text(2, 1, "After", pos = 2)
 ```
+
 One detail matters: an arrow is an eigenvector of a particular matrix. A different matrix might turn that same arrow. So the special relationship is between the arrow and the transformation we apply.
 
 ## What the formula means
@@ -78,7 +80,7 @@ An eigenvalue of one leaves the arrow unchanged. A negative eigenvalue reverses 
 
 ## So where do the turning arrows go?
 
-If we keep applying our matrix to $(1,0)$, we get $(2,1)$, then $(5,4)$, then $(14,13)$. The arrow gets closer to the diagonal direction of $(1,1)$. But how close, and how fast? Let's track it. The code below applies $A$ six times and measures the angle between the arrow and the diagonal line through $(1,1)$ after each step.
+If we keep applying our matrix to $(1,0)$, we get $(2,1)$, then $(5,4)$, then $(14,13)$. The arrow's length keeps growing, but its direction gets closer to the diagonal through $(1,1)$. How close, and how fast? Let's track it. The code below applies $A$ six times and measures the angle between the arrow and the diagonal line through $(1,1)$ after each step.
 
 ```{r}
 # Angle, in degrees, between an arrow and the diagonal line through (1, 1)
@@ -86,7 +88,7 @@ angle_to_diagonal <- function(v) {
   # size of the part along (1, 1)
   along  <- abs(v[1] + v[2]) / sqrt(2)
   # size of the part along (1, -1)
-  across <- abs(v[1] - v[2]) / sqrt(2)  
+  across <- abs(v[1] - v[2]) / sqrt(2)
   atan2(across, along) * 180 / pi
 }
 
@@ -102,7 +104,7 @@ knitr::kable(trajectory, digits = 2,
              col.names = c("Step", "x", "y", "Angle to diagonal (degrees)"))
 ```
 
-The angle starts at 45 degrees and drops below a tenth of a degree after just six steps. And if you look at the numbers closely, there's a pattern. After the first step, each angle is about three times smaller than the one before it: 18.43, 6.34, 2.12, 0.71. Why three?
+The angle starts at 45 degrees and drops below a tenth of a degree after just six steps. And if you look at the numbers closely, there's a pattern. As the angle gets smaller, it falls to roughly a third of its previous value: 6.34, 2.12, 0.71. Why a third?
 
 That happens because the part along the eigenvector $(1,1)$ grows faster than the other part. Here's what I mean: we can split any arrow into two pieces: one piece along $(1,1)$ and one piece along the other eigenvector of $A$, which is $(1,-1)$. For example, $(1,0)$ is just half of $(1,1)$ plus half of $(1,-1)$. Every time we apply $A$, the $(1,1)$ piece gets multiplied by its eigenvalue, 3, and the $(1,-1)$ piece gets multiplied by its eigenvalue, 1, so it doesn't change at all. After $k$ steps we get
 
@@ -115,7 +117,7 @@ Every step, the $(1,1)$ piece gets three times bigger compared to the other piec
 At this point I wondered if $(1,0)$ was just a lucky choice. To check, I tried sixteen arrows pointing in all different directions. I applied $A$ to each of them five times, and then shrank every arrow back to length one so we only compare directions.
 
 ```{r}
-#| fig-cap: "Left: sixteen arrows before applying A. Right: the same arrows after applying A five times, rescaled to length one. The blue arrows all end up on the dashed diagonal line. The two orange arrows start on the line through (1, -1) and stay there."
+#| fig-cap: "Left: sixteen arrows before applying A. Right: the same arrows after applying A five times, rescaled to length one. The blue arrows are now close to the dashed diagonal line. The two orange arrows start on the line through (1, -1) and stay there."
 #| fig-width: 8
 #| fig-height: 4.3
 
@@ -126,7 +128,7 @@ before <- rbind(cos(directions), sin(directions))
 after <- before
 for (step in 1:5) after <- A %*% after
 # rescale to length one
-after <- sweep(after, 2, sqrt(colSums(after^2)), "/")  
+after <- sweep(after, 2, sqrt(colSums(after^2)), "/")
 
 # the two arrows that start exactly along the other eigenvector, (1, -1)
 on_other_line <- abs(before[1, ] + before[2, ]) < 1e-8
@@ -144,7 +146,7 @@ for (i in 1:2) {
 }
 ```
 
-It wasn't luck. Fourteen of the sixteen arrows end up on the diagonal line. Some point toward $(1,1)$ and some toward $(-1,-1)$, but it's the same line. The only two that don't are the orange ones. An arrow starting exactly along the other eigenvector, $(1,-1)$, would stay unchanged instead, because its eigenvalue is 1. But these two only survive because they start exactly on that line. If you push one of them even a tiny bit off of it, that tiny piece along $(1,1)$ gets tripled every step, and eventually it takes over too.
+It wasn't luck. After five steps, fourteen of the sixteen arrows are close to the diagonal line. Some point toward $(1,1)$ and some toward $(-1,-1)$, but it's the same line. The only two that don't are the orange ones. An arrow starting exactly along the other eigenvector, $(1,-1)$, would stay unchanged instead, because its eigenvalue is 1. These two remain exceptions because they start exactly on that line. If you push one of them even a tiny bit off of it, that tiny piece along $(1,1)$ gets tripled every step, and eventually it takes over too.
 
 ## Does it matter how far apart the eigenvalues are?
 
@@ -194,16 +196,23 @@ legend("topright", legend = c("A: eigenvalues 3 and 1", "B: eigenvalues 3 and 2.
        col = c("blue", "red"), lwd = 2, bty = "n")
 ```
 
-This was the part that surprised me the most. Both matrices stretch $(1,1)$ by exactly 3, so if you only looked at the biggest eigenvalue, you would think they behave the same. They don't. With $A$, the arrow is within one degree of the diagonal after 4 steps. With $B$, it takes 39 steps, almost ten times longer. The reason is the same as before: each step, the $(1,1)$ piece gains on the other piece by the ratio of the eigenvalues. For $A$ that ratio is $3/1 = 3$, but for $B$ it is only $3/2.7 \approx 1.11$. That's why, with $B$, the arrow keeps "remembering" where it started for so long.
+This was the part that surprised me the most. Both matrices stretch $(1,1)$ by exactly 3, so if you only looked at the biggest eigenvalue, you would think they behave the same. They don't. With $A$, the arrow is within one degree of the diagonal after 4 steps. With $B$, it takes 39 steps, almost ten times as many. Both counts use the same starting arrow and the same one-degree cutoff. The reason is the same as before: each step, the $(1,1)$ piece gains on the other piece by the ratio of the eigenvalues. For $A$ that ratio is $3/1 = 3$, but for $B$ it is only $3/2.7 \approx 1.11$. That's why, with $B$, the arrow keeps "remembering" where it started for so long.
 
 ## What I learned from this
 
-Eigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. Together, they make it easier to understand how a system changes over time. That's the textbook summary, and it's true, but it felt pretty abstract to me until I actually ran these experiments. Two things finally clicked.
+Eigenvectors show us special directions within a transformation. Eigenvalues tell us what happens along those directions. That definition felt pretty abstract to me until I actually ran these experiments. Two things finally clicked.
 
-The first is that eigenvectors are not just weird exceptions. I used to think of them as the few arrows that happen not to turn. But if you apply the same matrix again and again, almost every arrow ends up lining up with the eigenvector that has the biggest eigenvalue. So the eigenvector is basically telling you where everything is heading. I think this is why eigenvectors show up in Markov chains and PageRank. In both cases, what we care about is where a process ends up after many steps, and that answer is an eigenvector. Even for PCA, one classic way to find the first principal component, called the power method, uses the same trick of multiplying by a matrix (the covariance matrix) over and over.
+The first is that eigenvectors are not just weird exceptions. I used to think of them as the few arrows that happen not to turn. For our matrix, repeated multiplication brings any arrow with a nonzero piece along $(1,1)$ closer to that line. So the eigenvector tells us where those turning arrows are heading. This helps me understand why eigenvectors matter in applications such as [PageRank](https://www-nlp.stanford.edu/IR-book/html/htmledition/the-pagerank-computation-1.html), where repeated multiplication is used to find a steady-state distribution.
 
-The second is that computing the eigenvalues isn't enough. We should also compare them. The biggest eigenvalue tells us which direction wins in the end, but how close the second one is to the biggest tells us how long that takes. With 3 and 1 it took 4 steps; with 3 and 2.7 it took 39. I find it helpful to think about this with a labor market example. In a simple model where workers move between having a job and being unemployed each month, this ratio decides whether a jump in unemployment fades in a few months or sticks around for a long time.
+The second is that computing the eigenvalues isn't enough. We should also compare them. For a fixed starting arrow, the ratio of the smaller eigenvalue to the larger one tells us how quickly the other component loses ground. With 3 and 1 it took 4 steps; with 3 and 2.7 it took 39. For me, this means that running both calculations for the same number of steps would not give equally accurate directions. I need to check how close the result actually is, rather than assume that a few more steps will be enough.
 
-One thing we need to be careful about, though: this only works when one eigenvalue is strictly bigger in size than all the others. For example, a matrix that rotates every arrow by 90 degrees has no real eigenvectors at all, so the arrows just keep spinning around and never settle on any line.
+One thing we need to be careful about, though: the standard [power-method argument](https://ericdarve.github.io/NLA/content/power_method.html) assumes one eigenvalue is strictly larger in absolute value than the others and the starting arrow has a nonzero component in its direction. For example, a matrix that rotates every arrow by 90 degrees has no real eigenvectors at all, so the arrows just keep spinning around and never settle on any line.
 
-So, back to my question. The few arrows that don't turn matter because they tell us where all the other arrows are going, and the eigenvalues tell us how fast they get there. For me, that's a much more useful way to think about eigenvectors than just remembering $Av = \lambda v$.
+So, back to my question. The few arrows that don't turn matter because they help explain where the other arrows in our experiment tend to point, and the eigenvalue ratio tells us how quickly they approach that line. For me, that's a much more useful way to think about eigenvectors than just remembering $Av = \lambda v$.
+
+## Sources
+
+- Eric Darve, [The Power Method](https://ericdarve.github.io/NLA/content/power_method.html).
+- Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schütze, [The PageRank Computation](https://www-nlp.stanford.edu/IR-book/html/htmledition/the-pagerank-computation-1.html), *Introduction to Information Retrieval*.
+
+The matrices are constructed examples, and all figures and numerical results are generated by the R code above. No external dataset is used.
