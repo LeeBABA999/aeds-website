@@ -6,3 +6,6 @@
 /.quarto/
 
 /blog/posts/post3/data/
+
+# macOS folder metadata
+.DS_Store
