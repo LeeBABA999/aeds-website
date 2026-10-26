@@ -46,7 +46,7 @@
     "href": "blog/index.html",
     "title": "Blog",
     "section": "",
-    "text": "Does One Year’s Income Tell the Whole Story?\n\n\nMatching fathers and adult children with SQL in Python\n\n\n\n\n\n\n\n\n\nOct 23, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nSame Region, Different Incomes\n\n\nChester’s median household income is about twice Philadelphia’s.\n\n\n\n\n\n\n\n\n\nOct 19, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nDid Paychecks Keep Up With Prices?\n\n\nPaychecks are up 32% since COVID began, but prices rose 29%. The real raise: less than a dollar an hour.\n\n\n\n\n\n\n\n\n\nOct 4, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nEducation and Unemployment Through the Pandemic and Recovery\n\n\nU.S. adults ages 25–64, 2019–2024\n\n\n\n\n\n\n\n\n\nSep 27, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nWhat Should I Build Next? What Python Job Postings Suggest\n\n\n\n\n\n\n\n\n\n\n\n\nSep 20, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nWhy Do the Arrows That Stay on the Same Line Matter So Much?\n\n\n\n\n\n\n\n\n\n\n\n\nSep 13, 2026\n\n\n\n\n\n\nNo matching items"
+    "text": "Back to Normal—for Which Jobs?\n\n\nAn uneven employment recovery in U.S. leisure and hospitality\n\n\n\n\n\n\n\n\n\nOct 26, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nDoes One Year’s Income Tell the Whole Story?\n\n\nMatching fathers and adult children with SQL in Python\n\n\n\n\n\n\n\n\n\nOct 23, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nSame Region, Different Incomes\n\n\nChester’s median household income is about twice Philadelphia’s.\n\n\n\n\n\n\n\n\n\nOct 19, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nDid Paychecks Keep Up With Prices?\n\n\nPaychecks are up 32% since COVID began, but prices rose 29%. The real raise: less than a dollar an hour.\n\n\n\n\n\n\n\n\n\nOct 4, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nEducation and Unemployment Through the Pandemic and Recovery\n\n\nU.S. adults ages 25–64, 2019–2024\n\n\n\n\n\n\n\n\n\nSep 27, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nWhat Should I Build Next? What Python Job Postings Suggest\n\n\n\n\n\n\n\n\n\n\n\n\nSep 20, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nWhy Do the Arrows That Stay on the Same Line Matter So Much?\n\n\n\n\n\n\n\n\n\n\n\n\nSep 13, 2026\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "blog/posts/post1/Untitled.html",
@@ -439,5 +439,54 @@
     "title": "Does One Year’s Income Tell the Whole Story?",
     "section": "Takeaway",
     "text": "Takeaway\nMy clearest finding is that higher parental family income accompanies higher adult-child family income under every definition I tried. The exact strength is less settled. I would report the later, averaged estimate alongside the alternatives rather than present 0.66 as the definitive answer.\nThere is another distinction worth keeping in mind: persistence does not tell us whether children are richer than their parents. Incomes could rise across generations while proportional differences associated with family background remain substantial. These regressions do not measure the share of children whose living standards improved.\nThe sample also shapes the answer. Complete records make comparisons consistent, but leave out people without the required household-head observations or resident-father link. I cannot tell whether including them would raise or lower IGE. This unweighted sample is not nationally representative. Before comparing mobility estimates, I would now ask whose resources they measure, at what ages, and over how many years."
+  },
+  {
+    "objectID": "blog/posts/post7/index.html",
+    "href": "blog/posts/post7/index.html",
+    "title": "Back to Normal—for Which Jobs?",
+    "section": "",
+    "text": "Hello everyone, welcome back!\nIn my last post, I looked at how income measurement changes our view of economic mobility. This time, I wanted to explore a related issue: how much can an industry total tell us about the jobs within it?\nBy December 2025, U.S. leisure and hospitality had slightly more jobs than before the pandemic. But were all three major parts of the industry back to their February 2020 job levels?\nAccommodation still had about 8% fewer jobs. That gap made me want to look beyond the total."
+  },
+  {
+    "objectID": "blog/posts/post7/index.html#what-the-data-measure",
+    "href": "blog/posts/post7/index.html#what-the-data-measure",
+    "title": "Back to Normal—for Which Jobs?",
+    "section": "What the data measure",
+    "text": "What the data measure\nI use monthly Bureau of Labor Statistics payroll estimates from FRED, covering January 2019–December 2025. Ending in December gives me a complete calendar year. The three components are arts, entertainment, and recreation; accommodation; and food services and drinking places. The dashed line shows their industry total.\nThese estimates are seasonally adjusted to remove recurring seasonal patterns. They count jobs, so someone holding two payroll jobs can appear twice. I saved the October 26, 2026 download because later revisions may change historical figures. All four series have observations for all 84 months.\nTo compare their recovery, I divide each month’s jobs by that component’s February 2020 jobs and multiply by 100. This puts each component on the same scale: 100 means back to its old level, and 105 means 5% above it.\n\n\nShow Python code\nfrom pathlib import Path\nfrom datetime import date\nimport requests\nimport pandas as pd\nimport plotly.graph_objects as go\n\nraw = Path(\"data/raw\")\nprocessed = Path(\"data/processed\")\nfigures = Path(\"results/figures\")\ntables = Path(\"results/tables\")\nfor folder in [raw, processed, figures, tables]:\n    folder.mkdir(parents=True, exist_ok=True)\n\nnames = {\n    \"CES7071000001\": \"Arts & recreation\",\n    \"CES7072100001\": \"Accommodation\",\n    \"CES7072200001\": \"Food & drink services\",\n    \"USLAH\": \"Industry total\"\n}\nurl = \"https://fred.stlouisfed.org/graph/fredgraph.csv?id=\" + \",\".join(names)\ncsv_file = raw / \"fred_employment.csv\"\nif not csv_file.exists():\n    response = requests.get(url, timeout=60)\n    response.raise_for_status()\n    csv_file.write_bytes(response.content)\n    (raw / \"download_date.txt\").write_text(date.today().isoformat())\n\njobs = pd.read_csv(csv_file, index_col=\"observation_date\", parse_dates=True)\njobs = jobs.loc[\"2019-01-01\":\"2025-12-01\", list(names)].rename(columns=names)\nassert jobs.index.equals(pd.date_range(\"2019-01-01\", \"2025-12-01\", freq=\"MS\"))\nassert jobs.notna().all().all() and jobs.gt(0).all().all()\n\nbaseline = jobs.loc[\"2020-02-01\"]\nindex = jobs.div(baseline).mul(100)\nchange = index - 100\nmillions = jobs / 1000  # FRED reports these series in thousands of jobs.\njobs.to_csv(processed / \"monthly_jobs_thousands.csv\")\nindex.to_csv(processed / \"monthly_index.csv\")\n\nsummary = pd.DataFrame({\n    \"feb_2020_thousands\": baseline,\n    \"dec_2025_thousands\": jobs.iloc[-1],\n    \"change_jobs\": (jobs.iloc[-1] - baseline) * 1000,\n    \"change_percent\": change.iloc[-1],\n    \"baseline_share_percent\": baseline / baseline[\"Industry total\"] * 100\n})\nfor sector in jobs.columns:\n    later = index.loc[\"2020-03-01\":, sector]\n    crossings = later[later >= 100]\n    summary.loc[sector, \"first_return\"] = (\n        crossings.index[0].strftime(\"%Y-%m\") if len(crossings) else \"Not by Dec 2025\"\n    )\n    summary.loc[sector, \"trough_month\"] = later.idxmin().strftime(\"%Y-%m\")\n    summary.loc[sector, \"trough_change_percent\"] = later.min() - 100\nsummary.to_csv(tables / \"recovery_summary.csv\", index_label=\"sector\")"
+  },
+  {
+    "objectID": "blog/posts/post7/index.html#explore-the-recovery",
+    "href": "blog/posts/post7/index.html#explore-the-recovery",
+    "title": "Back to Normal—for Which Jobs?",
+    "section": "Explore the recovery",
+    "text": "Explore the recovery\nStart with Recovery index. Hover over a line to see its job count and change from February 2020. Drag the date slider to focus on later years, or click a legend entry to hide a line. All dates restores the full period. The Jobs (millions) view will be useful when we look at the total below.\n\nFigure 1. U.S. payroll employment, January 2019–December 2025, seasonally adjusted. The dotted line marks the February 2020 level in the index view. “Arts & recreation” includes entertainment; “Food & drink services” includes drinking places. Source: BLS via FRED; calculations by the author.\nOpen the chart separately"
+  },
+  {
+    "objectID": "blog/posts/post7/index.html#after-the-initial-drop",
+    "href": "blog/posts/post7/index.html#after-the-initial-drop",
+    "title": "Back to Normal—for Which Jobs?",
+    "section": "After the initial drop",
+    "text": "After the initial drop\nThe first thing I notice is how similar the initial losses were. At their spring 2020 lows, all three components had lost roughly half their February jobs. Arts and recreation fell the most, about 52%, but was also the first to regain its old level, in May 2023. That’s what I find interesting here: the biggest initial loss didn’t lead to the longest recovery.\nYou can check the later years for yourself: move the slider to 2023–2025. By December 2025, arts and recreation was 7.4% above baseline. Food and drink services was just 0.5% above, while accommodation remained 8.0% below.\nI wouldn’t describe the first two as equally recovered. Food services first crossed 100 in October 2025 in this download, and by December it was still barely above the line. Arts and recreation had more room to spare. The exact crossing month could shift with revisions; the accommodation shortfall is a much clearer feature of this comparison."
+  },
+  {
+    "objectID": "blog/posts/post7/index.html#why-the-total-looks-better",
+    "href": "blog/posts/post7/index.html#why-the-total-looks-better",
+    "title": "Back to Normal—for Which Jobs?",
+    "section": "Why the total looks better",
+    "text": "Why the total looks better\nNow switch to Jobs (millions). Food and drink services is much larger than the other components: it accounted for about 73% of the industry’s jobs in February 2020. That makes its small net gain important for the total. Setting every series to 100 in February 2020 makes their changes easy to compare, but hides that difference in size.\nThe job counts help put the recovery together. Arts and recreation added about 184,000 jobs between February 2020 and December 2025. Accommodation had about 169,000 fewer. Those gains and losses almost canceled out. Food services added another 58,000, leaving the published total about 72,000 jobs, or 0.4%, above baseline. The small mismatch in the arithmetic comes from source rounding.\nThis is why I wanted both views in the same chart. In the index view, accommodation’s slower recovery is easy to see. Switching to job counts shows how increases elsewhere were large enough to cover that gap in the total."
+  },
+  {
+    "objectID": "blog/posts/post7/index.html#takeaway",
+    "href": "blog/posts/post7/index.html#takeaway",
+    "title": "Back to Normal—for Which Jobs?",
+    "section": "Takeaway",
+    "text": "Takeaway\nBy December 2025, the industry had regained its overall job count, but accommodation hadn’t. So I think we need to be more specific when we say the sector has recovered.\nFor me, the useful lesson is to ask where the jobs came back. A gain in arts and recreation can offset a loss in accommodation in a spreadsheet. It doesn’t tell us whether the people who lost accommodation jobs found comparable work, or whether their pay and hours recovered. We’d need different data to answer those questions.\nFebruary 2020 is also only a starting point. Matching it doesn’t tell us how many jobs there would have been without the pandemic. So I’d treat crossing 100 as a milestone, then look at which activities are still behind before calling the recovery complete."
+  },
+  {
+    "objectID": "blog/posts/post7/index.html#sources",
+    "href": "blog/posts/post7/index.html#sources",
+    "title": "Back to Normal—for Which Jobs?",
+    "section": "Sources",
+    "text": "Sources\n\nBLS, Current Employment Statistics: methods and measurement and industry coverage.\nFRED/BLS monthly seasonally adjusted employment series: arts, entertainment, and recreation, accommodation, food services and drinking places, and leisure and hospitality total. Downloaded October 26, 2026.\nPlotly Python documentation, for switching data and axis settings.\nReplication instructions and data notes."
   }
 ]

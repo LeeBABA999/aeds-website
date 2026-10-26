@@ -1,0 +1,205 @@
+---
+title: "Back to Normal—for Which Jobs?"
+subtitle: "An uneven employment recovery in U.S. leisure and hospitality"
+author: "Michael Li"
+date: "2026-10-26"
+categories: [Employment, Plotly, Python]
+engine: knitr
+resources:
+  - results/figures/employment_recovery.html
+  - README.md
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Show Python code"
+    embed-resources: false
+execute:
+  warning: false
+  message: false
+  cache: false
+  error: false
+---
+
+```{r}
+#| include: false
+if (Sys.getenv("RETICULATE_PYTHON") == "") {
+  Sys.setenv(RETICULATE_PYTHON = path.expand("~/aeds6400-python/bin/python"))
+}
+knitr::opts_knit$set(root.dir = normalizePath(dirname(knitr::current_input(dir = TRUE))))
+```
+
+## Why I looked at this
+
+Hello everyone, welcome back!
+
+In my last post, I looked at how income measurement changes our view of economic mobility. This time, I wanted to explore a related issue: how much can an industry total tell us about the jobs within it?
+
+By December 2025, U.S. leisure and hospitality had slightly more jobs than before the pandemic. **But were all three major parts of the industry back to their February 2020 job levels?**
+
+Accommodation still had about 8% fewer jobs. That gap made me want to look beyond the total.
+
+## What the data measure
+
+I use monthly [Bureau of Labor Statistics payroll estimates](https://www.bls.gov/bls/empsitquickguide.htm) from FRED, covering January 2019–December 2025. Ending in December gives me a complete calendar year. The three components are arts, entertainment, and recreation; accommodation; and food services and drinking places. The dashed line shows their industry total.
+
+These estimates are seasonally adjusted to remove recurring seasonal patterns. They count jobs, so someone holding two payroll jobs can appear twice. I saved the October 26, 2026 download because later revisions may change historical figures. All four series have observations for all 84 months.
+
+To compare their recovery, I divide each month's jobs by that component's February 2020 jobs and multiply by 100. This puts each component on the same scale: 100 means back to its old level, and 105 means 5% above it.
+
+```{python}
+#| label: prepare-employment
+#| output: false
+from pathlib import Path
+from datetime import date
+import requests
+import pandas as pd
+import plotly.graph_objects as go
+
+raw = Path("data/raw")
+processed = Path("data/processed")
+figures = Path("results/figures")
+tables = Path("results/tables")
+for folder in [raw, processed, figures, tables]:
+    folder.mkdir(parents=True, exist_ok=True)
+
+names = {
+    "CES7071000001": "Arts & recreation",
+    "CES7072100001": "Accommodation",
+    "CES7072200001": "Food & drink services",
+    "USLAH": "Industry total"
+}
+url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=" + ",".join(names)
+csv_file = raw / "fred_employment.csv"
+if not csv_file.exists():
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
+    csv_file.write_bytes(response.content)
+    (raw / "download_date.txt").write_text(date.today().isoformat())
+
+jobs = pd.read_csv(csv_file, index_col="observation_date", parse_dates=True)
+jobs = jobs.loc["2019-01-01":"2025-12-01", list(names)].rename(columns=names)
+assert jobs.index.equals(pd.date_range("2019-01-01", "2025-12-01", freq="MS"))
+assert jobs.notna().all().all() and jobs.gt(0).all().all()
+
+baseline = jobs.loc["2020-02-01"]
+index = jobs.div(baseline).mul(100)
+change = index - 100
+millions = jobs / 1000  # FRED reports these series in thousands of jobs.
+jobs.to_csv(processed / "monthly_jobs_thousands.csv")
+index.to_csv(processed / "monthly_index.csv")
+
+summary = pd.DataFrame({
+    "feb_2020_thousands": baseline,
+    "dec_2025_thousands": jobs.iloc[-1],
+    "change_jobs": (jobs.iloc[-1] - baseline) * 1000,
+    "change_percent": change.iloc[-1],
+    "baseline_share_percent": baseline / baseline["Industry total"] * 100
+})
+for sector in jobs.columns:
+    later = index.loc["2020-03-01":, sector]
+    crossings = later[later >= 100]
+    summary.loc[sector, "first_return"] = (
+        crossings.index[0].strftime("%Y-%m") if len(crossings) else "Not by Dec 2025"
+    )
+    summary.loc[sector, "trough_month"] = later.idxmin().strftime("%Y-%m")
+    summary.loc[sector, "trough_change_percent"] = later.min() - 100
+summary.to_csv(tables / "recovery_summary.csv", index_label="sector")
+```
+
+## Explore the recovery
+
+Start with **Recovery index**. Hover over a line to see its job count and change from February 2020. Drag the date slider to focus on later years, or click a legend entry to hide a line. **All dates** restores the full period. The **Jobs (millions)** view will be useful when we look at the total below.
+
+```{python}
+#| label: build-interactive-chart
+#| include: false
+colors = ["#087F8C", "#C45D21", "#3368B0", "#626A73"]
+fig = go.Figure()
+for sector, color in zip(jobs.columns, colors):
+    details = pd.DataFrame({"jobs": millions[sector], "change": change[sector]})
+    fig.add_trace(go.Scatter(
+        x=jobs.index, y=index[sector], name=sector, mode="lines",
+        line=dict(color=color, width=3,
+                  dash="dash" if sector == "Industry total" else "solid"),
+        customdata=details.to_numpy(),
+        hovertemplate=("%{x|%b %Y}<br>Jobs: %{customdata[0]:.4f} million"
+                       "<br>Change from Feb 2020: %{customdata[1]:+.1f}%"
+                       "<extra>%{fullData.name}</extra>")
+    ))
+
+reference = dict(type="line", xref="paper", x0=0, x1=1, y0=100, y1=100,
+                 line=dict(color="#999999", width=1, dash="dot"))
+buttons = []
+for label, values, axis_title, axis_range, shapes in [
+    ("Recovery index", index, "Employment index (Feb 2020 = 100)", [0, 115], [reference]),
+    ("Jobs (millions)", millions, "Payroll jobs (millions)", [0, 18], [])
+]:
+    buttons.append(dict(
+        label=label, method="update",
+        args=[{"y": [values[sector].tolist() for sector in jobs.columns]},
+              {"yaxis.title.text": axis_title, "yaxis.range": axis_range,
+               "yaxis.autorange": False, "shapes": shapes}]
+    ))
+
+fig.update_layout(
+    template="plotly_white", height=680,
+    title=dict(text="Employment recovered at different speeds", x=0.02, y=0.98),
+    font=dict(family="Arial, sans-serif", size=13, color="#243746"),
+    margin=dict(l=65, r=25, t=155, b=55),
+    hovermode="x", hoverlabel=dict(namelength=-1),
+    legend=dict(orientation="h", x=0, y=1.09, yanchor="bottom", font=dict(size=12)),
+    yaxis=dict(title="Employment index (Feb 2020 = 100)", range=[0, 115], fixedrange=True),
+    xaxis=dict(
+        range=["2019-01-01", "2025-12-01"], tickformat="%Y", dtick="M12",
+        rangeslider=dict(visible=True, thickness=0.10),
+        rangeselector=dict(x=1, xanchor="right", y=1.22,
+                           buttons=[dict(label="All dates", step="all")])
+    ),
+    updatemenus=[dict(buttons=buttons, direction="down", x=0, y=1.22,
+                     xanchor="left", yanchor="bottom", showactive=True)],
+    shapes=[reference]
+)
+config = {"responsive": True, "displayModeBar": False}
+fig.write_html(figures / "employment_recovery.html", include_plotlyjs=True, config=config)
+
+```
+
+```{=html}
+<iframe src="results/figures/employment_recovery.html" title="Interactive chart of U.S. leisure and hospitality employment" width="100%" height="710" style="border:0;"></iframe>
+```
+
+*Figure 1. U.S. payroll employment, January 2019–December 2025, seasonally adjusted. The dotted line marks the February 2020 level in the index view. “Arts & recreation” includes entertainment; “Food & drink services” includes drinking places. Source: BLS via FRED; calculations by the author.*
+
+[Open the chart separately](results/figures/employment_recovery.html)
+
+## After the initial drop
+
+The first thing I notice is how similar the initial losses were. At their spring 2020 lows, all three components had lost roughly half their February jobs. Arts and recreation fell the most, about 52%, but was also the first to regain its old level, in May 2023. That's what I find interesting here: the biggest initial loss didn't lead to the longest recovery.
+
+You can check the later years for yourself: move the slider to 2023–2025. By December 2025, arts and recreation was 7.4% above baseline. Food and drink services was just 0.5% above, while accommodation remained 8.0% below.
+
+I wouldn't describe the first two as equally recovered. Food services first crossed 100 in October 2025 in this download, and by December it was still barely above the line. Arts and recreation had more room to spare. The exact crossing month could shift with revisions; the accommodation shortfall is a much clearer feature of this comparison.
+
+## Why the total looks better
+
+Now switch to **Jobs (millions)**. Food and drink services is much larger than the other components: it accounted for about 73% of the industry's jobs in February 2020. That makes its small net gain important for the total. Setting every series to 100 in February 2020 makes their changes easy to compare, but hides that difference in size.
+
+The job counts help put the recovery together. Arts and recreation added about 184,000 jobs between February 2020 and December 2025. Accommodation had about 169,000 fewer. Those gains and losses almost canceled out. Food services added another 58,000, leaving the published total about 72,000 jobs, or 0.4%, above baseline. The small mismatch in the arithmetic comes from source rounding.
+
+This is why I wanted both views in the same chart. In the index view, accommodation's slower recovery is easy to see. Switching to job counts shows how increases elsewhere were large enough to cover that gap in the total.
+
+## Takeaway
+
+By December 2025, the industry had regained its overall job count, but accommodation hadn't. So I think we need to be more specific when we say the sector has recovered.
+
+For me, the useful lesson is to ask where the jobs came back. A gain in arts and recreation can offset a loss in accommodation in a spreadsheet. It doesn't tell us whether the people who lost accommodation jobs found comparable work, or whether their pay and hours recovered. We'd need different data to answer those questions.
+
+February 2020 is also only a starting point. Matching it doesn't tell us how many jobs there would have been without the pandemic. So I'd treat crossing 100 as a milestone, then look at which activities are still behind before calling the recovery complete.
+
+## Sources
+
+- BLS, [Current Employment Statistics: methods and measurement](https://www.bls.gov/bls/empsitquickguide.htm) and [industry coverage](https://www.bls.gov/IAG/TGS/iag70.htm).
+- FRED/BLS monthly seasonally adjusted employment series: [arts, entertainment, and recreation](https://fred.stlouisfed.org/series/CES7071000001), [accommodation](https://fred.stlouisfed.org/series/CES7072100001), [food services and drinking places](https://fred.stlouisfed.org/series/CES7072200001), and [leisure and hospitality total](https://fred.stlouisfed.org/series/USLAH). Downloaded October 26, 2026.
+- [Plotly Python documentation](https://plotly.com/python/dropdowns/), for switching data and axis settings.
+- [Replication instructions and data notes](README.md).
