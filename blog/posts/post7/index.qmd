@@ -306,5 +306,3 @@ February 2020 is also only a starting point. Matching it doesn't tell us how man
 
 - BLS, [Current Employment Statistics: methods and measurement](https://www.bls.gov/bls/empsitquickguide.htm) and [industry coverage](https://www.bls.gov/IAG/TGS/iag70.htm).
 - FRED/BLS monthly seasonally adjusted employment series: [arts, entertainment, and recreation](https://fred.stlouisfed.org/series/CES7071000001), [accommodation](https://fred.stlouisfed.org/series/CES7072100001), [food services and drinking places](https://fred.stlouisfed.org/series/CES7072200001), and [leisure and hospitality total](https://fred.stlouisfed.org/series/USLAH). Downloaded October 26, 2026.
-- [Plotly Python documentation](https://plotly.com/python/dropdowns/), for switching data and axis settings.
-- [Replication instructions and data notes](README.md).
