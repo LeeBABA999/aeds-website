@@ -7,6 +7,7 @@ categories: [Employment, Plotly, Python]
 engine: knitr
 resources:
   - results/figures/employment_recovery.html
+  - results/figures/employment_animation.html
   - README.md
 format:
   html:
@@ -41,11 +42,11 @@ Accommodation still had about 8% fewer jobs. That gap made me want to look beyon
 
 ## What the data measure
 
-I use monthly [Bureau of Labor Statistics payroll estimates](https://www.bls.gov/bls/empsitquickguide.htm) from FRED, covering January 2019–December 2025. Ending in December gives me a complete calendar year. The three components are arts, entertainment, and recreation; accommodation; and food services and drinking places. The dashed line shows their industry total.
+I use monthly, seasonally adjusted [Bureau of Labor Statistics payroll estimates](https://www.bls.gov/bls/empsitquickguide.htm) from FRED for January 2019–December 2025. The three components are arts, entertainment, and recreation; accommodation; and food services and drinking places. The dashed line is their total.
 
-These estimates are seasonally adjusted to remove recurring seasonal patterns. They count jobs, so someone holding two payroll jobs can appear twice. I saved the October 26, 2026 download because later revisions may change historical figures. All four series have observations for all 84 months.
+Seasonal adjustment removes recurring seasonal patterns. These series count jobs, not people; someone holding two payroll jobs can appear twice. I use the saved October 26, 2026 download because historical estimates can be revised.
 
-To compare their recovery, I divide each month's jobs by that component's February 2020 jobs and multiply by 100. This puts each component on the same scale: 100 means back to its old level, and 105 means 5% above it.
+For each component, I divide monthly jobs by February 2020 jobs and multiply by 100. An index of 100 means back to baseline; 105 means 5% above it.
 
 ```{python}
 #| label: prepare-employment
@@ -109,7 +110,7 @@ summary.to_csv(tables / "recovery_summary.csv", index_label="sector")
 
 ## Explore the recovery
 
-Start with **Recovery index**. Hover over a line to see its job count and change from February 2020. Drag the date slider to focus on later years, or click a legend entry to hide a line. **All dates** restores the full period. The **Jobs (millions)** view will be useful when we look at the total below.
+Start with **Recovery index**. Hover for job counts and percentage changes, drag the slider to focus on later years, and click legend entries to hide lines. **All dates** resets the period; **Jobs (millions)** reveals differences in industry size.
 
 ```{python}
 #| label: build-interactive-chart
@@ -169,7 +170,7 @@ fig.write_html(figures / "employment_recovery.html", include_plotlyjs=True, conf
 <iframe src="results/figures/employment_recovery.html" title="Interactive chart of U.S. leisure and hospitality employment" width="100%" height="710" style="border:0;"></iframe>
 ```
 
-*Figure 1. U.S. payroll employment, January 2019–December 2025, seasonally adjusted. The dotted line marks the February 2020 level in the index view. “Arts & recreation” includes entertainment; “Food & drink services” includes drinking places. Source: BLS via FRED; calculations by the author.*
+*Figure 1. Seasonally adjusted payroll employment, January 2019–December 2025. The dotted line marks February 2020 = 100. Source: BLS via FRED; calculations by the author.*
 
 [Open the chart separately](results/figures/employment_recovery.html)
 
@@ -189,9 +190,113 @@ The job counts help put the recovery together. Arts and recreation added about 1
 
 This is why I wanted both views in the same chart. In the index view, accommodation's slower recovery is easy to see. Switching to job counts shows how increases elsewhere were large enough to cover that gap in the total.
 
+## Watch the final stretch
+
+Press **Play** to follow the final stretch of the recovery, from 2023 through 2025. Use **Pause** or the month slider to inspect a month. Left of zero means fewer jobs than in February 2020; right means more. The gray bar is the industry total.
+
+```{python}
+#| label: build-recovery-animation
+#| include: false
+
+import plotly.express as px
+
+# Employment is measured in thousands of payroll jobs.
+gaps = jobs.loc["2023-01-01":"2025-12-01"].sub(baseline)
+
+animation_data = gaps.rename_axis("date").reset_index().melt(
+    id_vars="date",
+    var_name="sector",
+    value_name="change_thousands"
+)
+animation_data["month"] = animation_data["date"].dt.strftime("%Y-%m")
+animation_data.to_csv(tables / "employment_animation.csv", index=False)
+
+animation = px.bar(
+    animation_data,
+    x="change_thousands",
+    y="sector",
+    color="sector",
+    orientation="h",
+    animation_frame="month",
+    animation_group="sector",
+    category_orders={"sector": list(jobs.columns)},
+    color_discrete_map=dict(zip(jobs.columns, colors)),
+    range_x=[-600, 250],
+    custom_data=["month"],
+    labels={
+        "change_thousands": "Jobs gained or lost since Feb 2020 (thousands)",
+        "sector": ""
+    },
+    title="When the total recovered, which jobs were still missing?"
+)
+
+# Keep labels and hover information consistent across months.
+for frame in [animation, *animation.frames]:
+    for trace in frame.data:
+        trace.update(
+            texttemplate="%{x:+.1f}",
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate=(
+                "<b>%{y}</b><br>"
+                "Month: %{customdata[0]}<br>"
+                "Change: %{x:+,.1f} thousand jobs<extra></extra>"
+            )
+        )
+
+animation.add_vline(x=0, line_color="#555555", line_width=1)
+
+animation.update_layout(
+    template="plotly_white",
+    height=600,
+    showlegend=False,
+    font=dict(family="Arial, sans-serif", size=13, color="#243746"),
+    margin=dict(l=10, r=40, t=75, b=165),
+    bargap=0.45
+)
+animation.update_xaxes(fixedrange=True)
+animation.update_yaxes(fixedrange=True)
+
+# Position and label the playback controls.
+controls = animation.layout.updatemenus[0]
+controls.update(
+    x=0, y=-0.17,
+    xanchor="left", yanchor="top",
+    pad=dict(t=0)
+)
+controls.buttons[0].label = "Play"
+controls.buttons[1].label = "Pause"
+controls.buttons[0].args[1]["frame"]["duration"] = 700
+controls.buttons[0].args[1]["transition"]["duration"] = 300
+
+animation.layout.sliders[0].update(
+    x=0, y=-0.32,
+    len=1,
+    pad=dict(t=0),
+    currentvalue=dict(prefix="Month: ", font=dict(size=14))
+)
+
+animation.write_html(
+    figures / "employment_animation.html",
+    include_plotlyjs=True,
+    auto_play=False,
+    config={"responsive": True, "displayModeBar": False}
+)
+```
+
+```{=html}
+<iframe src="results/figures/employment_animation.html" title="Monthly animation of employment gains and shortfalls, 2023–2025" width="100%" height="630" style="border:0;"></iframe>
+```
+
+*Figure 2. Payroll job changes from February 2020, in thousands, with a fixed axis. Each frame is one month; gray shows the industry total. Source: BLS via FRED.*
+
+[Open the animation separately](results/figures/employment_animation.html)
+
+Try stopping at September 2025. The industry total is about 18,000 jobs above baseline, even though accommodation is still around 186,000 below and food services is just below its own starting point. Arts and recreation is about 206,000 above, enough to offset those shortfalls. That is the detail I find useful in the animation: we can inspect the mix of gains and losses at the moment the total crosses zero, rather than only compare the final values. The exact crossing month remains sensitive to data revisions.
+
 ## Takeaway
 
-By December 2025, the industry had regained its overall job count, but accommodation hadn't. So I think we need to be more specific when we say the sector has recovered.
+By December 2025, the industry had regained its overall job count, but accommodation hadn't. So I think a recovery date needs context: it marks when gains elsewhere offset remaining losses, not when every part of the industry recovered.
 
 For me, the useful lesson is to ask where the jobs came back. A gain in arts and recreation can offset a loss in accommodation in a spreadsheet. It doesn't tell us whether the people who lost accommodation jobs found comparable work, or whether their pay and hours recovered. We'd need different data to answer those questions.
 

@@ -180,6 +180,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#explore-the-recovery" id="toc-explore-the-recovery" class="nav-link" data-scroll-target="#explore-the-recovery">Explore the recovery</a></li>
   <li><a href="#after-the-initial-drop" id="toc-after-the-initial-drop" class="nav-link" data-scroll-target="#after-the-initial-drop">After the initial drop</a></li>
   <li><a href="#why-the-total-looks-better" id="toc-why-the-total-looks-better" class="nav-link" data-scroll-target="#why-the-total-looks-better">Why the total looks better</a></li>
+  <li><a href="#watch-the-final-stretch" id="toc-watch-the-final-stretch" class="nav-link" data-scroll-target="#watch-the-final-stretch">Watch the final stretch</a></li>
   <li><a href="#takeaway" id="toc-takeaway" class="nav-link" data-scroll-target="#takeaway">Takeaway</a></li>
   <li><a href="#sources" id="toc-sources" class="nav-link" data-scroll-target="#sources">Sources</a></li>
   </ul>
@@ -232,9 +233,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="what-the-data-measure" class="level2">
 <h2 class="anchored" data-anchor-id="what-the-data-measure">What the data measure</h2>
-<p>I use monthly <a href="https://www.bls.gov/bls/empsitquickguide.htm">Bureau of Labor Statistics payroll estimates</a> from FRED, covering January 2019–December 2025. Ending in December gives me a complete calendar year. The three components are arts, entertainment, and recreation; accommodation; and food services and drinking places. The dashed line shows their industry total.</p>
-<p>These estimates are seasonally adjusted to remove recurring seasonal patterns. They count jobs, so someone holding two payroll jobs can appear twice. I saved the October 26, 2026 download because later revisions may change historical figures. All four series have observations for all 84 months.</p>
-<p>To compare their recovery, I divide each month’s jobs by that component’s February 2020 jobs and multiply by 100. This puts each component on the same scale: 100 means back to its old level, and 105 means 5% above it.</p>
+<p>I use monthly, seasonally adjusted <a href="https://www.bls.gov/bls/empsitquickguide.htm">Bureau of Labor Statistics payroll estimates</a> from FRED for January 2019–December 2025. The three components are arts, entertainment, and recreation; accommodation; and food services and drinking places. The dashed line is their total.</p>
+<p>Seasonal adjustment removes recurring seasonal patterns. These series count jobs, not people; someone holding two payroll jobs can appear twice. I use the saved October 26, 2026 download because historical estimates can be revised.</p>
+<p>For each component, I divide monthly jobs by February 2020 jobs and multiply by 100. An index of 100 means back to baseline; 105 means 5% above it.</p>
 <div class="cell">
 <details>
 <summary>Show Python code</summary>
@@ -298,9 +299,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="explore-the-recovery" class="level2">
 <h2 class="anchored" data-anchor-id="explore-the-recovery">Explore the recovery</h2>
-<p>Start with <strong>Recovery index</strong>. Hover over a line to see its job count and change from February 2020. Drag the date slider to focus on later years, or click a legend entry to hide a line. <strong>All dates</strong> restores the full period. The <strong>Jobs (millions)</strong> view will be useful when we look at the total below.</p>
+<p>Start with <strong>Recovery index</strong>. Hover for job counts and percentage changes, drag the slider to focus on later years, and click legend entries to hide lines. <strong>All dates</strong> resets the period; <strong>Jobs (millions)</strong> reveals differences in industry size.</p>
 <iframe src="results/figures/employment_recovery.html" title="Interactive chart of U.S. leisure and hospitality employment" width="100%" height="710" style="border:0;"></iframe>
-<p><em>Figure 1. U.S. payroll employment, January 2019–December 2025, seasonally adjusted. The dotted line marks the February 2020 level in the index view. “Arts &amp; recreation” includes entertainment; “Food &amp; drink services” includes drinking places. Source: BLS via FRED; calculations by the author.</em></p>
+<p><em>Figure 1. Seasonally adjusted payroll employment, January 2019–December 2025. The dotted line marks February 2020 = 100. Source: BLS via FRED; calculations by the author.</em></p>
 <p><a href="results/figures/employment_recovery.html">Open the chart separately</a></p>
 </section>
 <section id="after-the-initial-drop" class="level2">
@@ -315,9 +316,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The job counts help put the recovery together. Arts and recreation added about 184,000 jobs between February 2020 and December 2025. Accommodation had about 169,000 fewer. Those gains and losses almost canceled out. Food services added another 58,000, leaving the published total about 72,000 jobs, or 0.4%, above baseline. The small mismatch in the arithmetic comes from source rounding.</p>
 <p>This is why I wanted both views in the same chart. In the index view, accommodation’s slower recovery is easy to see. Switching to job counts shows how increases elsewhere were large enough to cover that gap in the total.</p>
 </section>
+<section id="watch-the-final-stretch" class="level2">
+<h2 class="anchored" data-anchor-id="watch-the-final-stretch">Watch the final stretch</h2>
+<p>Press <strong>Play</strong> to follow the final stretch of the recovery, from 2023 through 2025. Use <strong>Pause</strong> or the month slider to inspect a month. Left of zero means fewer jobs than in February 2020; right means more. The gray bar is the industry total.</p>
+<iframe src="results/figures/employment_animation.html" title="Monthly animation of employment gains and shortfalls, 2023–2025" width="100%" height="630" style="border:0;"></iframe>
+<p><em>Figure 2. Payroll job changes from February 2020, in thousands, with a fixed axis. Each frame is one month; gray shows the industry total. Source: BLS via FRED.</em></p>
+<p><a href="results/figures/employment_animation.html">Open the animation separately</a></p>
+<p>Try stopping at September 2025. The industry total is about 18,000 jobs above baseline, even though accommodation is still around 186,000 below and food services is just below its own starting point. Arts and recreation is about 206,000 above, enough to offset those shortfalls. That is the detail I find useful in the animation: we can inspect the mix of gains and losses at the moment the total crosses zero, rather than only compare the final values. The exact crossing month remains sensitive to data revisions.</p>
+</section>
 <section id="takeaway" class="level2">
 <h2 class="anchored" data-anchor-id="takeaway">Takeaway</h2>
-<p>By December 2025, the industry had regained its overall job count, but accommodation hadn’t. So I think we need to be more specific when we say the sector has recovered.</p>
+<p>By December 2025, the industry had regained its overall job count, but accommodation hadn’t. So I think a recovery date needs context: it marks when gains elsewhere offset remaining losses, not when every part of the industry recovered.</p>
 <p>For me, the useful lesson is to ask where the jobs came back. A gain in arts and recreation can offset a loss in accommodation in a spreadsheet. It doesn’t tell us whether the people who lost accommodation jobs found comparable work, or whether their pay and hours recovered. We’d need different data to answer those questions.</p>
 <p>February 2020 is also only a starting point. Matching it doesn’t tell us how many jobs there would have been without the pandemic. So I’d treat crossing 100 as a milestone, then look at which activities are still behind before calling the recovery complete.</p>
 </section>
