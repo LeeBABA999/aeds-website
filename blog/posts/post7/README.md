@@ -1,6 +1,6 @@
 # Blog 7: Back to Normal—for Which Jobs?
 
-This post asks whether the three main parts of U.S. leisure and hospitality had regained their February 2020 payroll-job levels by December 2025. An interactive Plotly chart compares both relative recovery and job counts.
+This post asks whether the three main parts of U.S. leisure and hospitality had regained their February 2020 payroll-job levels by December 2025. Two interactive Plotly charts compare recovery paths and animate monthly job gains or shortfalls during 2023–2025.
 
 ## Data
 
@@ -22,8 +22,8 @@ index.qmd          Article and all analysis/chart code
 requirements.txt   Python package versions
  data/raw/         Original CSV and source metadata
  data/processed/   Employment levels and recovery indices
- results/figures/  Self-contained interactive HTML
- results/tables/   Recovery summary CSV
+ results/figures/  Self-contained HTML: recovery chart and monthly animation
+ results/tables/   Recovery summary and monthly animation CSVs
 ```
 
 ## Reproduce
@@ -49,8 +49,8 @@ quarto render index.qmd
 
 Alternatively, open `index.qmd` in RStudio and click **Render** after installing dependencies. To use another Python environment, set `RETICULATE_PYTHON` to its executable in the first R chunk before rendering.
 
-Rendering regenerates the processed CSVs, summary table, and interactive chart. In this website, the article is written to `docs/blog/posts/post7/index.html`; outside a website project, it appears beside `index.qmd`. Keep the chart's relative folder path when publishing.
+Rendering regenerates the processed CSVs, recovery summary, animation data, and both interactive HTML charts. In this website, the article is written to `docs/blog/posts/post7/index.html`; outside a website project, it appears beside `index.qmd`. Keep the chart's relative folder path when publishing.
 
 ## Quick check
 
-The December 2025 changes from February 2020 should round to **+7.4%** for arts/recreation, **−8.0%** for accommodation, **+0.5%** for food/drink services, and **+0.4%** for the total. Check the chart's view dropdown, hover labels, legend, and date slider in the rendered page. These are descriptive job-count comparisons, not estimates of the pandemic's causal effects.
+The December 2025 changes from February 2020 should round to **+7.4%** for arts/recreation, **−8.0%** for accommodation, **+0.5%** for food/drink services, and **+0.4%** for the total. Check the chart's view dropdown, hover labels, legend, and date slider in the rendered page. For the animation, test **Play**, **Pause**, and the month slider. September 2025 should show the industry total about 18,000 jobs above February 2020. These are descriptive job-count comparisons, not estimates of the pandemic's causal effects.
