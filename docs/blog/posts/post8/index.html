@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Michael Li">
+<meta name="dcterms.date" content="2026-11-01">
+
+<title>Michael Li - Is That Wage Difference More Than Sampling Noise?</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Michael Li</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../bio.html">
+ <span class="menu-text">About Me</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resume.html">
+ <span class="menu-text">Resume</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../blog/index.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#why-i-wanted-to-try-this" id="toc-why-i-wanted-to-try-this" class="nav-link active" data-scroll-target="#why-i-wanted-to-try-this">Why I wanted to try this</a></li>
+  <li><a href="#a-population-we-can-check" id="toc-a-population-we-can-check" class="nav-link" data-scroll-target="#a-population-we-can-check">A population we can check</a></li>
+  <li><a href="#one-sample-many-resamples" id="toc-one-sample-many-resamples" class="nav-link" data-scroll-target="#one-sample-many-resamples">One sample, many resamples</a></li>
+  <li><a href="#does-95-really-mean-95" id="toc-does-95-really-mean-95" class="nav-link" data-scroll-target="#does-95-really-mean-95">Does 95% really mean 95%?</a></li>
+  <li><a href="#testing-the-20-benchmark" id="toc-testing-the-20-benchmark" class="nav-link" data-scroll-target="#testing-the-20-benchmark">Testing the $20 benchmark</a></li>
+  <li><a href="#takeaway" id="toc-takeaway" class="nav-link" data-scroll-target="#takeaway">Takeaway</a></li>
+  <li><a href="#sources-and-replication" id="toc-sources-and-replication" class="nav-link" data-scroll-target="#sources-and-replication">Sources and replication</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Is That Wage Difference More Than Sampling Noise?</h1>
+<p class="subtitle lead">What bootstrap intervals and simulated tests can tell us</p>
+  <div class="quarto-categories">
+    <div class="quarto-category">Simulation</div>
+    <div class="quarto-category">Bootstrap</div>
+    <div class="quarto-category">Statistical Inference</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Michael Li </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 1, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="why-i-wanted-to-try-this" class="level2">
+<h2 class="anchored" data-anchor-id="why-i-wanted-to-try-this">Why I wanted to try this</h2>
+<p>Hello everyone, welcome back!</p>
+<p>In my last post, I looked at how employment totals can hide an uneven recovery. This time, I wanted to ask how much confidence we should put in a number from a sample. If a wage survey reports an average above $20, is that enough evidence that the population average differs from $20?</p>
+<p>I follow one sample of 100 workers through a bootstrap interval and a hypothesis test. Using a simulated population lets me compare what these methods tell us with the truth.</p>
+</section>
+<section id="a-population-we-can-check" class="level2">
+<h2 class="anchored" data-anchor-id="a-population-we-can-check">A population we can check</h2>
+<p>All wages here are simulated. I draw 100 independent observations from a normal population with mean $21 and standard deviation $4. This simple model lets me focus on sampling uncertainty. The $20 benchmark is the value being tested; the population mean remains $21.</p>
+<p>The experiments use a fixed seed and separate random streams. The <a href="../../../blog/posts/post8/index.html">Quarto source</a> contains all the code, with <a href="data/observed_wages.csv">generated data</a> and a replication guide in the readme section.</p>
+</section>
+<section id="one-sample-many-resamples" class="level2">
+<h2 class="anchored" data-anchor-id="one-sample-many-resamples">One sample, many resamples</h2>
+<p>The sample average comes out at $20.43. I draw 5,000 bootstrap samples from these same wages, each containing 100 observations. Sampling <strong>with replacement</strong> means a wage can appear several times or be left out. Each resample gives another mean.</p>
+<p>Here, the observed wages stand in for the population. Resampling approximates how the sample mean would vary if we could keep collecting new samples. Taking the 2.5th and 97.5th percentiles of the bootstrap means gives [$19.69, $21.17], a 95% percentile interval. This estimates the population average; it is not a range containing 95% of individual wages.</p>
+<iframe src="results/figures/bootstrap.html" title="Bootstrap means as the number of resamples increases" width="100%" height="650" style="border:0;">
+</iframe>
+<p><em>Figure 1. The distribution of bootstrap means from one fixed sample. Lines mark the sample mean, true population mean, and interval endpoints. All figures use simulated data.</em></p>
+<p><a href="results/figures/bootstrap.html">Open Figure 1 separately</a></p>
+<p>Try Play or move the slider yourself. The histogram becomes smoother as more resamples accumulate, but we still have only 100 workers. Repeating the calculation does not add observations. The interval includes both $20 and $21, leaving considerable uncertainty about the difference from the benchmark.</p>
+</section>
+<section id="does-95-really-mean-95" class="level2">
+<h2 class="anchored" data-anchor-id="does-95-really-mean-95">Does 95% really mean 95%?</h2>
+<p>To check that label, I draw <strong>5,000 fresh population samples</strong> at each sample size: 25, 100, and 400. Each gets its own interval, based on 2,000 bootstrap resamples. I then count how often those intervals contain the true mean, $21. That fraction is the coverage rate.</p>
+<iframe src="results/figures/coverage.html" title="Repeated-sample bootstrap coverage for three sample sizes" width="100%" height="720" style="border:0;">
+</iframe>
+<p><em>Figure 2. Each horizontal line is a 95% bootstrap interval from a fresh sample; the vertical green line marks the true mean, $21. Blue intervals contain $21 and orange intervals miss it. The plot shows the first 100 intervals without selection; reported coverage uses all 5,000 samples.</em></p>
+<p><a href="results/figures/coverage.html">Open Figure 2 separately</a></p>
+<p>Switch sample sizes and watch the intervals narrow. Average width falls from $3.02 with 25 workers to $0.78 with 400. Coverage is 93.04%, 93.94%, and 94.90%, respectively. For 400 workers, 4,745 of 5,000 intervals cover $21: close to the intended 95%.</p>
+<p>The smaller samples miss more often. Estimated simulation noise, measured by Monte Carlo standard errors, is only about 0.3–0.4 percentage points. The shortfall at 25 is too large to readily explain that way. A small sample can be an imperfect substitute for its population, and the percentile interval is only an approximation.</p>
+<p>The 95% level describes repeated use of the method. Once an interval is calculated, it either contains $21 or misses it. We have not assigned a 95% probability to the fixed population mean.</p>
+</section>
+<section id="testing-the-20-benchmark" class="level2">
+<h2 class="anchored" data-anchor-id="testing-the-20-benchmark">Testing the $20 benchmark</h2>
+<p>I test <span class="math inline">\(H_0:\mu=20\)</span> against <span class="math inline">\(H_A:\mu\ne20\)</span>. The t statistic expresses the observed gap in estimated standard errors:</p>
+<p><span class="math display">\[
+t_{\mathrm{obs}}
+=
+\frac{\bar{x}-20}{s/\sqrt{100}}
+=
+1.13.
+\]</span></p>
+<p>Here, <span class="math inline">\(s\)</span> is the sample standard deviation. For this experiment, I generate 50,000 samples under the null: mean $20, standard deviation $4, and 100 observations per sample. Each sample gets its own t statistic.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="results/figures/null_test.png" class="img-fluid figure-img" alt="Two null-distribution histograms distinguish the 5 percent rejection tails from the wider p-value tails for the observed t statistic of 1.13."></p>
+<p></p><figcaption class="figure-caption">Figure 3. Left: the 5% rejection region. Right: simulated statistics at least as extreme as the observed statistic, used for the two-sided p-value.</figcaption><p></p>
+</figure>
+</div>
+<p>The orange tails mark the rejection region: <span class="math inline">\(|t|\)</span> must exceed approximately 1.99, the simulated 95th percentile of <span class="math inline">\(|t|\)</span>. If the $20 null were true, about 5% of repeated samples would fall there and falsely signal a difference. Our statistic stays inside the boundaries.</p>
+<p>The teal tails depend on our observed result. They contain 12,990 null statistics at least as far from zero as ours, counting both directions. Using <span class="math inline">\((\mathrm{count}+1)/(50{,}000+1)\)</span> gives <span class="math inline">\(p=0.260\)</span>. About 26% of null simulations are this extreme, so I do not reject at 5%. This is not a 26% probability that the null is true.</p>
+</section>
+<section id="takeaway" class="level2">
+<h2 class="anchored" data-anchor-id="takeaway">Takeaway</h2>
+<p>I set the population mean at $21, so I know it differs from the $20 benchmark. Even so, the test does not reject. That is why I would be careful with a claim of “no difference” based only on a nonsignificant result.</p>
+<p>More bootstrap repetitions make the calculation steadier; more independent observations provide more information. Before treating a reported wage average as convincing evidence of a difference, I would check how many workers were sampled, how they were selected, and how wide the interval is. Those details tell me much more than the average alone.</p>
+</section>
+<section id="sources-and-replication" class="level2">
+<h2 class="anchored" data-anchor-id="sources-and-replication">Sources and replication</h2>
+<ul>
+<li>Simulation design and figures: Python code in the Quarto source; no external wage dataset.</li>
+<li>Course materials: AEDS 6400, Class 15, <em>Randomness, Entropy, and Monte Carlo Methods</em></li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left"><img src="../../../images/UniversityofPennsylvania_FullLogo_RGB.png" class="img-fluid" width="100"></div>   
+      <div class="nav-footer-center">© 2026 Michael Li</div>
+  </div>
+</footer>
+
+
+
+</body></html>

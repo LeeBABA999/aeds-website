@@ -46,7 +46,7 @@
     "href": "blog/index.html",
     "title": "Blog",
     "section": "",
-    "text": "Back to Normal—for Which Jobs?\n\n\nAn uneven employment recovery in U.S. leisure and hospitality\n\n\n\n\n\n\n\n\n\nOct 26, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nDoes One Year’s Income Tell the Whole Story?\n\n\nMatching fathers and adult children with SQL in Python\n\n\n\n\n\n\n\n\n\nOct 23, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nSame Region, Different Incomes\n\n\nChester’s median household income is about twice Philadelphia’s.\n\n\n\n\n\n\n\n\n\nOct 19, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nDid Paychecks Keep Up With Prices?\n\n\nPaychecks are up 32% since COVID began, but prices rose 29%. The real raise: less than a dollar an hour.\n\n\n\n\n\n\n\n\n\nOct 4, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nEducation and Unemployment Through the Pandemic and Recovery\n\n\nU.S. adults ages 25–64, 2019–2024\n\n\n\n\n\n\n\n\n\nSep 27, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nWhat Python Project Should I Build Next? What Job Postings Suggest\n\n\n\n\n\n\n\n\n\n\n\n\nSep 20, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\nWhy Do the Arrows That Stay on the Same Line Matter So Much?\n\n\n\n\n\n\n\n\n\n\n\n\nSep 13, 2026\n\n\n\n\n\n\nNo matching items"
+    "text": "Is That Wage Difference More Than Sampling Noise?\n\n\nWhat bootstrap intervals and simulated tests can tell us\n\n\n\n\n\n\n\n\n\nNov 1, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBack to Normal—for Which Jobs?\n\n\nAn uneven employment recovery in U.S. leisure and hospitality\n\n\n\n\n\n\n\n\n\nOct 26, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDoes One Year’s Income Tell the Whole Story?\n\n\nMatching fathers and adult children with SQL in Python\n\n\n\n\n\n\n\n\n\nOct 23, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSame Region, Different Incomes\n\n\nChester’s median household income is about twice Philadelphia’s.\n\n\n\n\n\n\n\n\n\nOct 19, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDid Paychecks Keep Up With Prices?\n\n\nPaychecks are up 32% since COVID began, but prices rose 29%. The real raise: less than a dollar an hour.\n\n\n\n\n\n\n\n\n\nOct 4, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nEducation and Unemployment Through the Pandemic and Recovery\n\n\nU.S. adults ages 25–64, 2019–2024\n\n\n\n\n\n\n\n\n\nSep 27, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nWhat Python Project Should I Build Next? What Job Postings Suggest\n\n\n\n\n\n\n\n\n\n\n\n\nSep 20, 2026\n\n\nMichael Li\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nWhy Do the Arrows That Stay on the Same Line Matter So Much?\n\n\n\n\n\n\n\n\n\n\n\n\nSep 13, 2026\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "resume.html",
@@ -432,5 +432,54 @@
     "title": "Back to Normal—for Which Jobs?",
     "section": "Watch the final stretch",
     "text": "Watch the final stretch\nPress Play to follow the final stretch of the recovery, from 2023 through 2025. Use Pause or the month slider to inspect a month. Left of zero means fewer jobs than in February 2020; right means more. The gray bar is the industry total.\n\nFigure 2. Payroll job changes from February 2020, in thousands, with a fixed axis. Each frame is one month; gray shows the industry total. Source: BLS via FRED.\nOpen the animation separately\nTry stopping at September 2025. The industry total is about 18,000 jobs above baseline, even though accommodation is still around 186,000 below and food services is just below its own starting point. Arts and recreation is about 206,000 above, enough to offset those shortfalls. That is the detail I find useful in the animation: we can inspect the mix of gains and losses at the moment the total crosses zero, rather than only compare the final values. The exact crossing month remains sensitive to data revisions."
+  },
+  {
+    "objectID": "blog/posts/post8/index.html",
+    "href": "blog/posts/post8/index.html",
+    "title": "Is That Wage Difference More Than Sampling Noise?",
+    "section": "",
+    "text": "Hello everyone, welcome back!\nIn my last post, I looked at how employment totals can hide an uneven recovery. This time, I wanted to ask how much confidence we should put in a number from a sample. If a wage survey reports an average above $20, is that enough evidence that the population average differs from $20?\nI follow one sample of 100 workers through a bootstrap interval and a hypothesis test. Using a simulated population lets me compare what these methods tell us with the truth."
+  },
+  {
+    "objectID": "blog/posts/post8/index.html#a-population-we-can-check",
+    "href": "blog/posts/post8/index.html#a-population-we-can-check",
+    "title": "Is That Wage Difference More Than Sampling Noise?",
+    "section": "A population we can check",
+    "text": "A population we can check\nAll wages here are simulated. I draw 100 independent observations from a normal population with mean $21 and standard deviation $4. This simple model lets me focus on sampling uncertainty. The $20 benchmark is the value being tested; the population mean remains $21.\nThe experiments use a fixed seed and separate random streams. The Quarto source contains all the code, with generated data and a replication guide in the readme section."
+  },
+  {
+    "objectID": "blog/posts/post8/index.html#one-sample-many-resamples",
+    "href": "blog/posts/post8/index.html#one-sample-many-resamples",
+    "title": "Is That Wage Difference More Than Sampling Noise?",
+    "section": "One sample, many resamples",
+    "text": "One sample, many resamples\nThe sample average comes out at $20.43. I draw 5,000 bootstrap samples from these same wages, each containing 100 observations. Sampling with replacement means a wage can appear several times or be left out. Each resample gives another mean.\nHere, the observed wages stand in for the population. Resampling approximates how the sample mean would vary if we could keep collecting new samples. Taking the 2.5th and 97.5th percentiles of the bootstrap means gives [$19.69, $21.17], a 95% percentile interval. This estimates the population average; it is not a range containing 95% of individual wages.\n\n\nFigure 1. The distribution of bootstrap means from one fixed sample. Lines mark the sample mean, true population mean, and interval endpoints. All figures use simulated data.\nOpen Figure 1 separately\nTry Play or move the slider yourself. The histogram becomes smoother as more resamples accumulate, but we still have only 100 workers. Repeating the calculation does not add observations. The interval includes both $20 and $21, leaving considerable uncertainty about the difference from the benchmark."
+  },
+  {
+    "objectID": "blog/posts/post8/index.html#does-95-really-mean-95",
+    "href": "blog/posts/post8/index.html#does-95-really-mean-95",
+    "title": "Is That Wage Difference More Than Sampling Noise?",
+    "section": "Does 95% really mean 95%?",
+    "text": "Does 95% really mean 95%?\nTo check that label, I draw 5,000 fresh population samples at each sample size: 25, 100, and 400. Each gets its own interval, based on 2,000 bootstrap resamples. I then count how often those intervals contain the true mean, $21. That fraction is the coverage rate.\n\n\nFigure 2. Each horizontal line is a 95% bootstrap interval from a fresh sample; the vertical green line marks the true mean, $21. Blue intervals contain $21 and orange intervals miss it. The plot shows the first 100 intervals without selection; reported coverage uses all 5,000 samples.\nOpen Figure 2 separately\nSwitch sample sizes and watch the intervals narrow. Average width falls from $3.02 with 25 workers to $0.78 with 400. Coverage is 93.04%, 93.94%, and 94.90%, respectively. For 400 workers, 4,745 of 5,000 intervals cover $21: close to the intended 95%.\nThe smaller samples miss more often. Estimated simulation noise, measured by Monte Carlo standard errors, is only about 0.3–0.4 percentage points. The shortfall at 25 is too large to readily explain that way. A small sample can be an imperfect substitute for its population, and the percentile interval is only an approximation.\nThe 95% level describes repeated use of the method. Once an interval is calculated, it either contains $21 or misses it. We have not assigned a 95% probability to the fixed population mean."
+  },
+  {
+    "objectID": "blog/posts/post8/index.html#testing-the-20-benchmark",
+    "href": "blog/posts/post8/index.html#testing-the-20-benchmark",
+    "title": "Is That Wage Difference More Than Sampling Noise?",
+    "section": "Testing the $20 benchmark",
+    "text": "Testing the $20 benchmark\nI test \\(H_0:\\mu=20\\) against \\(H_A:\\mu\\ne20\\). The t statistic expresses the observed gap in estimated standard errors:\n\\[\nt_{\\mathrm{obs}}\n=\n\\frac{\\bar{x}-20}{s/\\sqrt{100}}\n=\n1.13.\n\\]\nHere, \\(s\\) is the sample standard deviation. For this experiment, I generate 50,000 samples under the null: mean $20, standard deviation $4, and 100 observations per sample. Each sample gets its own t statistic.\n\n\n\nFigure 3. Left: the 5% rejection region. Right: simulated statistics at least as extreme as the observed statistic, used for the two-sided p-value.\n\n\nThe orange tails mark the rejection region: \\(|t|\\) must exceed approximately 1.99, the simulated 95th percentile of \\(|t|\\). If the $20 null were true, about 5% of repeated samples would fall there and falsely signal a difference. Our statistic stays inside the boundaries.\nThe teal tails depend on our observed result. They contain 12,990 null statistics at least as far from zero as ours, counting both directions. Using \\((\\mathrm{count}+1)/(50{,}000+1)\\) gives \\(p=0.260\\). About 26% of null simulations are this extreme, so I do not reject at 5%. This is not a 26% probability that the null is true."
+  },
+  {
+    "objectID": "blog/posts/post8/index.html#takeaway",
+    "href": "blog/posts/post8/index.html#takeaway",
+    "title": "Is That Wage Difference More Than Sampling Noise?",
+    "section": "Takeaway",
+    "text": "Takeaway\nI set the population mean at $21, so I know it differs from the $20 benchmark. Even so, the test does not reject. That is why I would be careful with a claim of “no difference” based only on a nonsignificant result.\nMore bootstrap repetitions make the calculation steadier; more independent observations provide more information. Before treating a reported wage average as convincing evidence of a difference, I would check how many workers were sampled, how they were selected, and how wide the interval is. Those details tell me much more than the average alone."
+  },
+  {
+    "objectID": "blog/posts/post8/index.html#sources-and-replication",
+    "href": "blog/posts/post8/index.html#sources-and-replication",
+    "title": "Is That Wage Difference More Than Sampling Noise?",
+    "section": "Sources and replication",
+    "text": "Sources and replication\n\nSimulation design and figures: Python code in the Quarto source; no external wage dataset.\nCourse materials: AEDS 6400, Class 15, Randomness, Entropy, and Monte Carlo Methods"
   }
 ]

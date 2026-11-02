@@ -1,0 +1,47 @@
+{
+  "seed": 20261101,
+  "true_mean": 21.0,
+  "sd": 4.0,
+  "n": 100,
+  "bootstrap_resamples": 5000,
+  "coverage_replications": 5000,
+  "coverage_resamples": 2000,
+  "null_simulations": 50000,
+  "null_mean": 20.0,
+  "sample_mean": 20.434840243292438,
+  "sample_sd": 3.8436186697030896,
+  "ci_lower": 19.69183469954357,
+  "ci_upper": 21.167242831954233,
+  "observed_t": 1.131330344292527,
+  "critical_abs": 1.9893408464394562,
+  "extreme_count": 12990,
+  "p_value": 0.2598148037039259,
+  "p_mc_se": 0.001961178581772789,
+  "reject_5_percent": false,
+  "coverage": [
+    {
+      "n": 25,
+      "replications": 5000,
+      "covered": 4652,
+      "coverage": 0.9304,
+      "mc_se": 0.003598773124274438,
+      "mean_width": 3.023844921363041
+    },
+    {
+      "n": 100,
+      "replications": 5000,
+      "covered": 4697,
+      "coverage": 0.9394,
+      "mc_se": 0.0033742448043969776,
+      "mean_width": 1.549436261289503
+    },
+    {
+      "n": 400,
+      "replications": 5000,
+      "covered": 4745,
+      "coverage": 0.949,
+      "mc_se": 0.0031112376958374634,
+      "mean_width": 0.7807015597592434
+    }
+  ]
+}
