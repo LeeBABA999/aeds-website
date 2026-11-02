@@ -1004,7 +1004,7 @@ I follow one sample of 100 workers through a bootstrap interval and a hypothesis
 
 All wages here are simulated. I draw 100 independent observations from a normal population with mean \$21 and standard deviation \$4. This simple model lets me focus on sampling uncertainty. The \$20 benchmark is the value being tested; the population mean remains \$21.
 
-The experiments use a fixed seed and separate random streams. The [Quarto source](index.qmd) contains all the code, with [generated data](data/observed_wages.csv) and a replication guide in the readme section.
+The experiments use a fixed seed and separate random streams. The [Quarto source](https://github.com/LeeBABA999/aeds-website/blob/main/blog/posts/post8/index.qmd) contains all the code, with [generated data](data/observed_wages.csv) and a [short replication guide](README.md).
 
 ## One sample, many resamples
 

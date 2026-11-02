@@ -1,3 +1,13 @@
+# Blog 8: Is That Wage Difference More Than Sampling Noise?
+
+A simulated wage survey explains bootstrap confidence intervals, repeated-sample coverage, and hypothesis testing. All code and writing are in one Quarto file.
+
+- [Read the blog post](https://leebaba999.github.io/aeds-website/blog/posts/post8/)
+- [Code and article source](blog/posts/post8/index.qmd)
+- [Replication instructions](blog/posts/post8/README.md)
+
+---
+
 # Blog 7: Back to Normal—for Which Jobs?
 
 This post asks whether the three main parts of U.S. leisure and hospitality had regained their February 2020 payroll-job levels by December 2025. An interactive Plotly chart compares both relative recovery and job counts.

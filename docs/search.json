@@ -445,7 +445,7 @@
     "href": "blog/posts/post8/index.html#a-population-we-can-check",
     "title": "Is That Wage Difference More Than Sampling Noise?",
     "section": "A population we can check",
-    "text": "A population we can check\nAll wages here are simulated. I draw 100 independent observations from a normal population with mean $21 and standard deviation $4. This simple model lets me focus on sampling uncertainty. The $20 benchmark is the value being tested; the population mean remains $21.\nThe experiments use a fixed seed and separate random streams. The Quarto source contains all the code, with generated data and a replication guide in the readme section."
+    "text": "A population we can check\nAll wages here are simulated. I draw 100 independent observations from a normal population with mean $21 and standard deviation $4. This simple model lets me focus on sampling uncertainty. The $20 benchmark is the value being tested; the population mean remains $21.\nThe experiments use a fixed seed and separate random streams. The Quarto source contains all the code, with generated data and a short replication guide."
   },
   {
     "objectID": "blog/posts/post8/index.html#one-sample-many-resamples",
